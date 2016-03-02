@@ -7,18 +7,13 @@
 #include "Path.h"
 #include <algorithm>
 #include "HelperMacros.h"
-
+#include <assert.h>
 //////////////////////////////////////////////
 // globals...
 #define CHUNKHEADERSIZE sizeof(long)*3
 const char * lwSurfMapTypes[]=  {SURF_COLR,SURF_LUMI,			SURF_DIFF,	SURF_SPEC,			SURF_GLOS,		 SURF_REFL,			SURF_TRAN,			 SURF_RIND,						SURF_TRNL,			 SURF_BUMP,NULL};
 const MAP_TYPE meshMapTypes[]={COLOR_MAP,LUMINOSITY_MAP,DIFFUSE_MAP,SPECULARITY_MAP,GLOSSINESS_MAP,REFLECTION_MAP,TRANSPARENCY_MAP,REFRACTION_INDEX_MAP,TRANSLUCENCY_MAP,BUMP_MAP}; //LW surface map type equvivalents
 const std::string CMeshExport::defPrg("Default.program");
-int cmpVert(const void * v1, const void * v2)
-{
-	// TODO:: point index must be smaller than 2^31 !!!
-	return (int)((Vertex*)v1)->id - (int)((Vertex*)v2)->id;
-}
 
 int cmpVert2(const void * v1, const void * v2)
 {
@@ -31,50 +26,56 @@ size_t pointScan(void * data, LWPntID pntID)
 	CMeshExport * meshExport = (CMeshExport*)data;
 	LWFVector vector;
 	meshExport->meshInfo->pntBasePos(meshExport->meshInfo, pntID, vector);
-	Vertex * v = &meshExport->vertices[meshExport->cVertex++];
-	v->pos[0] = vector[0];
-	v->pos[1] = vector[1];
-	v->pos[2] = -vector[2];
-	v->id = pntID;
+	meshExport->vertices.push_back({ { vector[0], vector[1], -vector[2] }, pntID });
 	return 0;
 }
 
-long pointIndex(Vertex * vertices, LWPntID pntID, long cVertex)
-{
-	return (Vertex *)bsearch(pntID, vertices, cVertex, sizeof(Vertex), cmpVert2)-vertices;
-}
-
-int cmpPoly(const void * p1, const void * p2)
-{
-	return strcmp(((Poly*)p1)->surf, ((Poly*)p2)->surf);
-}
-
+//long pointIndex(Vertex * vertices, LWPntID pntID, long cVertex)
+//{
+//	return (Vertex *)bsearch(pntID, vertices, cVertex, sizeof(Vertex), cmpVert2)-vertices;
+//}
+//
+//int cmpPoly(const void * p1, const void * p2)
+//{
+//	return strcmp(((Poly*)p1)->surf, ((Poly*)p2)->surf);
+//}
+struct PolyScanData {
+	LWMeshInfo * meshInfo;
+	std::vector<Poly>& lines;
+	std::vector<Poly>& polygons;
+	std::vector<Vertex>& vertices;
+	size_t& layer;
+};
 size_t polygonScan(void * data, LWPolID polID)
 {
-	CMeshExport * meshExport = (CMeshExport*)data;
-	LWMeshInfo * meshInfo = meshExport->meshInfo;
+	PolyScanData * psd = (PolyScanData*)data;
+	LWMeshInfo * meshInfo = psd->meshInfo;
 	if (meshInfo->polType(meshInfo, polID) != LWPOLTYPE_FACE)
 		return 0;
-	if (meshInfo->polSize(meshInfo, polID) == VERTICESPERPOLY) {
-		long v1, v2, v3;
-		LWPntID pntID = meshInfo->polVertex(meshInfo, polID, 0);
-		v3 = pointIndex(meshExport->vertices, pntID, meshExport->cVertex);
-		pntID = meshInfo->polVertex(meshInfo, polID, 1);
-		v2 = pointIndex(meshExport->vertices, pntID, meshExport->cVertex);
-		pntID = meshInfo->polVertex(meshInfo, polID, 2);
-		v1 = pointIndex(meshExport->vertices, pntID, meshExport->cVertex);
-		auto surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
-		meshExport->polygons.push_back({ v1, v2, v3, polID, surf });
+	auto vCount = meshInfo->polSize(meshInfo, polID);
+	if (vCount != VERTICESPERPOLY && vCount != VERTICESPERLINE)
+		return 0;
+	auto less = [](const Vertex& v1, const LWPntID& id) {
+		return v1.id < id;
+	};
+	LWPntID pntID = meshInfo->polVertex(meshInfo, polID, 0);
+	auto it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
+	assert(it != std::end(psd->vertices));
+	long v3 = std::distance(std::begin(psd->vertices), it);
+	pntID = meshInfo->polVertex(meshInfo, polID, 1);
+	it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
+	assert(it != std::end(psd->vertices));
+	long v2 = std::distance(std::begin(psd->vertices), it);
+	const char* surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
+	if (vCount == VERTICESPERLINE) {
+		psd->lines.push_back({ v3, v2, 0u, polID, surf, psd->layer });
+		return 0;
 	}
-	else if (meshInfo->polSize(meshInfo, polID) == VERTICESPERLINE) {
-		long v1, v2;
-		LWPntID pntID = meshInfo->polVertex(meshInfo, polID, 0);
-		v1 = pointIndex(meshExport->vertices, pntID, meshExport->cVertex);
-		pntID = meshInfo->polVertex(meshInfo, polID, 1);
-		v2 = pointIndex(meshExport->vertices, pntID, meshExport->cVertex);
-		const char* surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
-		meshExport->lines.push_back({v1, v2, polID, surf});
-	}
+	pntID = meshInfo->polVertex(meshInfo, polID, 2);
+	it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
+	assert(it != std::end(psd->vertices));
+	long v1 = std::distance(std::begin(psd->vertices), it);
+	psd->polygons.push_back({ v1, v2, v3, polID, surf, psd->layer });
 	return 0;
 }
 
@@ -282,7 +283,7 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 		if (!meshInfo)
 			continue;
 		meshInfo->pntVSelect(meshInfo, _uvmap);
-		for (unsigned long i = 0;i<cVertex;i++)
+		for (unsigned long i = 0;i<vertices.size();i++)
 		{
 			if (meshInfo->pntVGet(meshInfo, vertices[i].id, pfData))
 				uvmap->nV++;
@@ -313,7 +314,7 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 		if (!meshInfo)
 			continue;
 		meshInfo->pntVSelect(meshInfo, _uvmap);
-		for (unsigned long i=0;i<cVertex;i++)
+		for (unsigned long i=0;i<vertices.size();i++)
 			if (meshInfo->pntVGet(meshInfo, vertices[i].id, &pUV->u))
 			{
 				pUV->point = i;
@@ -668,10 +669,10 @@ long CMeshExport::WriteTag(const char * szTag,const long nSize,const long nEleme
 void CMeshExport::DumpPoints(void)
 {
 	DWORD written = 0;
-	WriteTag(PNTS, cVertex * 3 * sizeof(float), cVertex);
-	for (unsigned long i = 0; i < cVertex; i++)
+	WriteTag(PNTS, vertices.size() * 3 * sizeof(float), vertices.size());
+	for (auto& v : vertices)
 	{
-		::WriteFile(m_hFile, vertices[i].pos, sizeof(float) * 3, &written, NULL);
+		::WriteFile(m_hFile, v.pos, sizeof(float) * 3, &written, NULL);
 	}
 }
 
@@ -679,11 +680,11 @@ void CMeshExport::DumpPolygons(void)
 {
 	DWORD written = 0;
 	WriteTag(POLS, VERTICESPERPOLY * sizeof(long) * polygons.size(), polygons.size());
-	for (size_t i = 0; i <  polygons.size(); i++)
+	for (auto& p : polygons)
 	{
-		::WriteFile(m_hFile, &polygons[i].v1, sizeof(long), &written, NULL);
-		::WriteFile(m_hFile, &polygons[i].v2, sizeof(long), &written, NULL);
-		::WriteFile(m_hFile, &polygons[i].v3, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &p.v1, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &p.v2, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &p.v3, sizeof(long), &written, NULL);
 	}	
 }
 
@@ -691,10 +692,10 @@ void CMeshExport::DumpLines(void)
 {
 	DWORD written = 0;
 	WriteTag(LINE, VERTICESPERLINE * sizeof(long) * lines.size(), lines.size());
-	for (size_t i = 0; i < lines.size(); i++)
+	for (auto& l : lines)
 	{
-		::WriteFile(m_hFile, &lines[i].v1, sizeof(long), &written, NULL);
-		::WriteFile(m_hFile, &lines[i].v2, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &l.v1, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &l.v2, sizeof(long), &written, NULL);
 	}
 }
 
@@ -733,9 +734,8 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		}
 		WriteHeader();
 		// Get point and polygon count...
-		int layer = 0;
-		size_t nPolygons = 0;
-		nVertices = 0;
+		size_t layer = 0;
+		size_t nPolygons = 0, nVertices = 0;
 		while(objFunc->layerExists(object, layer))
 		{
 			meshInfo = objFunc->layerMesh(object, layer);
@@ -750,8 +750,7 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 			layer++;
 		}
 		polygons.reserve(nPolygons);
-		vertices = new Vertex[nVertices];
-		cVertex = 0;
+		vertices.reserve(nVertices);
 		// Scan points...
 		layer = 0;
 		while(objFunc->layerExists(object, layer))
@@ -766,27 +765,27 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 				break;
 			layer++;
 		}
-		qsort(vertices, cVertex, sizeof(Vertex), cmpVert);
+		std::sort(vertices.begin(), vertices.end(), [](const Vertex& v1, const Vertex& v2) {
+			return intptr_t(v1.id) < intptr_t(v2.id); });
 		DumpPoints();
 		layer = 0;
+		PolyScanData psd{ meshInfo, lines, polygons, vertices, layer };
 		while(objFunc->layerExists(object, layer))
 		{
 			meshInfo = objFunc->layerMesh(object, layer);
 			if (!meshInfo)
 				continue;
-			meshInfo->scanPolys(meshInfo, polygonScan, this);
+			meshInfo->scanPolys(meshInfo, polygonScan, &psd);
 			if (meshInfo->destroy)
 				meshInfo->destroy(meshInfo);
 			if (!m_bAllLayers)
 				break;
 			layer++;
 		}
-		std::sort(polygons.begin(), polygons.end(), [](const Poly& p1, const Poly& p2) {
-			return strcmp(p1.surf, p2.surf)<0;
-		});
-		std::sort(lines.begin(), lines.end(), [](const PolyLine& p1, const PolyLine& p2) {
-			return strcmp(p1.surf, p2.surf)<0;
-		});
+		auto srfIDCmp = [](const Poly& p1, const Poly& p2) {
+			return strcmp(p1.surf, p2.surf)<0;};
+		std::sort(polygons.begin(), polygons.end(), srfIDCmp);
+		std::sort(lines.begin(), lines.end(), srfIDCmp);
 		DumpPolygons();
 		DumpLines();
 		DumpVMaps(object);
@@ -806,7 +805,6 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		serBase.Release(&serBase);	
 		CleanupSurfaces(&surf);
 		vmapList.clear();
-		DEL_ARRAY(vertices);
 		::CloseHandle(m_hFile);
 	}
 }

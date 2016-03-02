@@ -14,17 +14,13 @@ struct Poly
 	long v1, v2, v3;
 	LWPolID id;
 	const char * surf;
+	size_t layer;
 };
-struct PolyLine {
-	long v1, v2;
-	LWPolID id;
-	const char * surf;
-};
-typedef struct
+struct Vertex
 {
 	float pos[3];
 	LWPntID id;	
-}Vertex;
+};
 
 class CMeshExport
 {
@@ -43,10 +39,9 @@ public:
 	Surfaces surf;
 	LWSurfaceID *surfIDList;
 	std::vector<std::string> shaders_to_surfIDs;
-	unsigned int cVertex, nVertices;
-	std::vector<PolyLine> lines;
+	std::vector<Poly> lines;
 	std::vector<Poly> polygons;
-	Vertex * vertices;
+	std::vector<Vertex> vertices;
 private:
 	int obj;
 	long WriteTag(const char * szTag,const long nSize,const long nElement);

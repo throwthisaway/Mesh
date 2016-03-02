@@ -492,7 +492,7 @@ void CMesh::Draw(void)
 		}
         // !!!
       //  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDrawArrays(GL_TRIANGLES, surf->poly_offset * VERTICESPERPOLY , surf->poly_num * VERTICESPERPOLY);
+		glDrawArrays(GL_TRIANGLES, surf->poly_offset * VERTICESPERPOLY , surf->poly_count * VERTICESPERPOLY);
         _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
 		pGLSurface->TearDown();
         _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
@@ -551,7 +551,7 @@ std::auto_ptr<char> CMesh::DumpColoring(void)
     for (long i = 0; i<m_Surfaces.GetCount(); i++)		
 	{
 		Surface * surface = &m_Surfaces.m_Surface[i]; 
-		long poly_end = surface->poly_num + surface->poly_offset;
+		long poly_end = surface->poly_count + surface->poly_offset;
 		for (long j = surface->poly_offset; j<poly_end; j++)
         {
             for (long k = 0; k<VERTICESPERPOLY; k++)
@@ -570,7 +570,7 @@ std::auto_ptr<float> CMesh::CalcVertexNormals(void)
 	for (long i = 0; i<m_Surfaces.GetCount(); i++)		
 	{
 		Surface * surface = &m_Surfaces.m_Surface[i]; 
-		long poly_end = surface->poly_num + surface->poly_offset;
+		long poly_end = surface->poly_count + surface->poly_offset;
 		for (long j = surface->poly_offset; j<poly_end; j++)
 		{
 			CPolygon * polygon = m_Polygons.GetPolygon(j);
@@ -637,7 +637,7 @@ std::auto_ptr<float> CMesh::CalcVertexNormals(void)
         //...The correct way of doing it
 
         // Old, erroneous way...
-		if (surface->poly_num>0)
+		if (surface->poly_count>0)
 		{
  			for (long j = 0; j<m_Vertices.GetCount(); j++)
 			{

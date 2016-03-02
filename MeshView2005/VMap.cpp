@@ -84,7 +84,7 @@ void _CVMaps::Setup(Surfaces& surfaces, CPolygons& polygons, CVertices& vertices
 			SurfLayer * pLayer = surfaces.m_Surface[i].surface_infos[j].layers;
 			while (pLayer && (pLayer->uvmap != m_nUVMaps))
 			{
-				CreateSurfaceUVs((long)pLayer->uvmap, &uvmaps[i][(long)pLayer->uvmap], surfaces.m_Surface[i].poly_offset, surfaces.m_Surface[i].poly_num, polygons, vertices);
+				CreateSurfaceUVs((long)pLayer->uvmap, &uvmaps[i][(long)pLayer->uvmap], surfaces.m_Surface[i].poly_offset, surfaces.m_Surface[i].poly_count, polygons, vertices);
 				pLayer->uvmap = uvmaps[i][(long)pLayer->uvmap].VBO;
 				pLayer = pLayer->next;
 			}	

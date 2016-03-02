@@ -184,7 +184,7 @@ public:
 		// Assigned polygon count
 		bNameValid = tempStr.LoadString(IDS_SURFACE_POLYGON_COUNT);
 		ASSERT(bNameValid);
-		pProp = new CMFCPropertyGridProperty(tempStr, (COleVariant&)_variant_t(_pSurface->poly_num));
+		pProp = new CMFCPropertyGridProperty(tempStr, (COleVariant&)_variant_t(_pSurface->poly_count));
 		pProp->Enable(FALSE);
 		propertiesWnd.m_wndPropList.AddProperty(pProp);
 
