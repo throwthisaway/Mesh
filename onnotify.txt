@@ -1,0 +1,26 @@
+BOOL CSceneBrowser::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
+{
+	if (m_wndTree.GetDlgCtrlID() == wParam)
+	{
+		LPNMHDR nmhdr = (LPNMHDR)lParam;
+		if (nmhdr->code == TVN_SELCHANGED)
+		{
+			LPNMTREEVIEW pNMTreeView = (LPNMTREEVIEW)lParam;
+			HITEM hItem = pNMTreeView->itemNew.hItem;
+			DWORD_PTR pItemData = m_wndTree.GetItemData(hItem);
+			// TODO:: show properties
+		}else if (nmhdr->code == NM_DBLCLK)
+		{
+			HITEM hItem = m_wndTree.GetSelectedItem();
+			DWORD_PTR pItemData = m_wndTree.GetItemData(hItem);
+			// TODO:: open editor
+		}
+		else if (nmhdr->code == TVN_DELETEITEM)
+		{
+			HITEM hItem = m_wndTree.GetSelectedItem();
+			DWORD_PTR pItemData = m_wndTree.GetItemData(hItem);
+			// TODO:: do the cleanup for the item data
+		}
+	}
+	return CDockablePane::OnNotify(wParam, lParam, pResult);
+}

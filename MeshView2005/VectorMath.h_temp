@@ -1,0 +1,43 @@
+#pragma once
+#include <math.h>
+
+template<class T> class CVector
+{
+public:
+	T a,b,c;
+	CVector() {};
+	CVector(T _a, T _b, T _c) { a = _a; b = _b; c = _c; };
+	inline void operator+= (const CVector<T>& vec) { a += vec.a; b += vec.b; c += vec.c; };	
+	inline void operator/= (const T r) { a /= r; b /= r; c /= r; };	
+};
+
+template<class T> class CVectorMath
+{
+public:
+
+	template<class T> static T Dot(const CVector<T>& vec1, const CVector<T>& vec2 )
+	{
+		T res = vec1.a * vec2.a + vec1.b * vec2.b + vec1.c * vec2.c;
+		return res;
+	};
+	template<class T> static CVector<T>& Cross(const CVector<T>& vec1, const CVector<T>& vec2 )
+	{
+		CVector<T> res;
+		res.a = vec1.b * vec2.c - vec1.c * vec2.b;
+		res.b = vec1.c * vec2.a - vec1.a * vec2.c;
+		res.c = vec1.a * vec2.b - vec1.b * vec2.a;
+		return res;
+	};
+	template<class T> static void Normalize(CVector<T>& vec)
+	{
+		T r;
+		r = (T) sqrt(Dot(vec, vec));
+		if (r>0)
+			vec /= r;			
+	};
+	template<class T> static T Angle(const CVector<T>& vec1, const CVector<T>& vec2)
+	{
+		return (T)acos(Dot(vec1, vec2));
+	}
+
+};

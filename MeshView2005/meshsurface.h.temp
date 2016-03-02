@@ -1,0 +1,259 @@
+//#ifndef _MESH_SURFACE_
+//#define _MESH_SURFACE_
+#pragma once
+#ifdef __cplusplus
+	#define SERIALIZER public: void Relocate(long, void *); 
+#else
+	#define SERIALIZER
+#endif
+//#define RELOCATEPTR(size, type,base,ptr) ptr = ((long long)ptr != size)? (type*)((long long)base+(long long)ptr): 0
+#define RELOCATEPTR(size, type, base, ptr) ptr = ((long long)ptr != size)? new((long long)base+(long long)ptr) type() : NULL)
+#define RELOCATEPTRARRAY(size, type, base, ptr, arraysize) ptr = ((long long)ptr != size)? new((long long)base+(long long)ptr) type[arraysize] : NULL)
+
+#define PNTS "PNTS"
+#define POLS "POLS"
+#define SURF "SURF"
+
+#define SINF "SINF"
+#define IMAG "IMAG"
+#define RMAP "RMAP"
+#define RRMA "RRMA"
+#define TXTC "TXTC"
+#define DVMA "DVMA"
+#define VMAP "VMAP"
+#define SLYR "SLYR"
+#define SRFC "SRFC"
+
+#define TAG(t) ((t[3] << 24) | (t[2] << 16) | (t[1] << 8)  | t[0])
+// typedefs
+typedef int BOOL;
+typedef float _FLOAT;
+
+typedef enum eMAP_TYPE{COLOR_MAP,LUMINOSITY_MAP,DIFFUSE_MAP,SPECULARITY_MAP,GLOSSINESS_MAP,REFLECTION_MAP,TRANSPARENCY_MAP,REFRACTION_INDEX_MAP,TRANSLUCENCY_MAP,BUMP_MAP}MAP_TYPE;
+typedef enum eREF_OPT{BACKDROP,RAY_TRACING_BACKDROP,SPHERICAL,RAY_TRACING_SPHERICAL}REF_OPT;
+typedef enum eLAYER_TYPE{IMAGE_LAYER,PROCEDURAL_LAYER,GRADIENT_LAYER}LAYER_TYPE;
+typedef enum eBLEND_MODE{NORMAL_BLEND,ADDITIVE_BLEND,SUBSTRACTIVE_BLEND,DIFFERENCE_BLEND,MULTIPLY_BLEND,DIVIDE_BLEND,ALPHA_BLEND,TEXTURE_DISPLACEMENT_BLEND}BLEND_MODE;
+typedef enum ePROJECTION{PLANAR_PROJECTION,CYLINDERAL_PROJECTION,SPHERICAL_PROJECTION,CUBIC_PROJECTION,FRONT_PROJECTION,UV_PROJECTION}PROJECTION;
+typedef enum eTILE_TYPE{RESET_TILE,REPEAT_TILE,MIRROR_TILE,EDGE_TILE}TILE_TYPE;
+typedef enum eFALLOFF_TYPE{CUBIC_FALLOFF,SPERICHAL_FALLOFF,LINEARX_FALLOFF,LINEARY_FALLOFF,LINEARZ_FALLOFF}FALLOFF_TYPE;
+typedef enum eAXIS{NO_AXIS,X_AXIS,Y_AXIS,Z_AXIS}AXIS;
+typedef enum eIMAGE_TYPE{STILL_IMAGE,SEQUENCE_IMAGE}IMAGE_TYPE;
+
+#ifdef __cplusplus
+class Image
+#else
+typedef struct st_Image
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	char * path;
+	//int ID; //???
+	IMAGE_TYPE type;
+
+	_FLOAT brightness;
+	_FLOAT contrast;
+	_FLOAT hue;
+	_FLOAT saturation;
+	_FLOAT gamma;
+	BOOL invert;
+	SERIALIZER
+#ifdef __cplusplus
+};
+#else
+}Image;
+#endif
+
+#ifdef __cplusplus
+class RefMap
+#else
+typedef struct st_RefMap
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+		REF_OPT opt;
+		Image map;
+		_FLOAT seam_angle,blurring;
+#ifdef __cplusplus
+};
+#else
+}RefMap;
+#endif
+
+#ifdef __cplusplus
+class TextureCoords
+#else
+typedef struct st_TextureCoords
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	AXIS axis;
+	_FLOAT	scale[3]; // TODO: struct{X,Y,Z}
+	_FLOAT pos[3]; // TODO: struct{X,Y,Z}
+	_FLOAT rot[3]; // TODO: struct{H,P,B}
+	_FLOAT falloff[3]; // TODO: struct{X,Y,Z}
+	FALLOFF_TYPE falloff_type;
+	BOOL world_coords;
+#ifdef __cplusplus
+};
+#else
+}TextureCoords;
+#endif
+
+#ifdef __cplusplus
+class DVMap
+#else
+typedef struct st_DVMap
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	unsigned int poly;	// actual polygon index
+	unsigned char count; // Number of UV coords per polygon
+	unsigned int * point; // count * point index
+	_FLOAT * uv;	// count * _FLOAT UV pairs
+	SERIALIZER
+#ifdef __cplusplus
+};
+#else
+}DVMap;
+#endif
+
+#ifdef __cplusplus
+class UVMap
+#else
+typedef struct st_UVMap
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	unsigned int perpoint_count;
+	unsigned int * point; // perpoint_count * point index
+	_FLOAT * uv; // perpoint_count * _FLOAT UV pairs
+	unsigned int perpoly_count;
+	DVMap * duvmap;	// poly_count * DVMap
+	SERIALIZER
+#ifdef __cplusplus
+};
+#else
+}UVMap;
+#endif
+
+#ifdef __cplusplus
+class SurfLayer
+#else
+typedef struct st_SurfLayer
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	LAYER_TYPE type;
+	BLEND_MODE blend_mode;
+	PROJECTION projection;
+	UVMap * uvmap;
+	Image * image; 
+	_FLOAT opacity;
+	BOOL invert;
+	TILE_TYPE width_tile, height_tile;
+	BOOL pixel_blending;
+#ifdef __cplusplus
+	SurfLayer * next;
+#else
+	struct st_SurfLayer * next;
+#endif
+	//TextureCoords *texture_coords; obsolote...
+	SERIALIZER
+#ifdef __cplusplus
+};
+#else
+}SurfLayer;
+#endif
+
+#ifdef __cplusplus
+class SurfInfo
+#else
+typedef struct st_SurfInfo
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	MAP_TYPE type;
+	_FLOAT val; //0..100%, 0.0..
+	SurfLayer * layers;
+#ifdef __cplusplus
+	SurfInfo *next;
+#else
+	struct st_SurfInfo *next;
+#endif
+	
+	SERIALIZER
+#ifdef __cplusplus
+};
+#else
+}SurfInfo;
+#endif
+
+#ifdef __cplusplus
+class Surface
+#else
+typedef struct st_Surface
+#endif
+{
+#ifdef _DEBUG
+	long tag;
+#endif
+	_FLOAT color[3]; // TODO: struct{R,G,B}
+	BOOL smoothing;
+	SurfInfo * surface_infos;
+	RefMap * reflection_map, * refraction_map;
+	char * name;
+	unsigned int * poly_list;
+	SERIALIZER
+	// TODO: render outline, etc.
+	/*char *comment;*/
+#ifdef __cplusplus
+};
+#else
+}Surface;
+#endif
+
+#ifdef __cplusplus
+class Surfaces
+#else
+typedef struct st_Surfaces
+#endif
+{	
+#ifdef __cplusplus
+public:
+#endif
+	long m_nSurfaces;
+	Surface * m_Surface;
+	SERIALIZER
+#ifdef __cplusplus
+public:
+	inline void CleanUp(void)
+	{
+		// Remember: this address is not pointing to an array of surfaces, it points to a "neutral" char array
+		delete m_Surface;
+	//TODO:
+	//// Call dtors:
+	//for (unsigned int i=0;i<m_nSurfaces;i++)
+	//	delete m_Surfaces->m_Surface[i];
+	//delete [] m_Surfaces;	// Remember: this address is not pointing to an array of surfaces, it points to a "neutral" char array
+	//TODO:
+	}
+};
+#else
+}Surfaces;
+#endif
+
+//#endif

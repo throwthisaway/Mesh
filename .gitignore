@@ -1,0 +1,15 @@
+Debug/
+Release/
+x64/
+include/
+include_96/
+ipch/
+*.suo
+*.lib
+*.ilk
+*.pdb
+*.exe
+*.obj
+*.zip
+*.sdf
+*.dll
