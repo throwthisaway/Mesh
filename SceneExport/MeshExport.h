@@ -16,6 +16,18 @@ struct Poly
 	const char * surf;
 	size_t layer;
 };
+struct Layer {
+	struct Pivot {
+		float x, y, z;
+	}pivot;
+	struct {
+		size_t start, count;
+	}poly, line;
+	struct SurfSection {
+		size_t index, start, count;
+	};
+	std::vector<SurfSection> polySections, lineSections;
+};
 struct Vertex
 {
 	float pos[3];
@@ -32,8 +44,8 @@ class CMeshExport
 public:
 	GlobalFunc * global;
 	LWMeshInfo * meshInfo;
+	// TODO:: remove this
 	LWSurfaceFuncs *surff;
-
 	std::string fname; // File name
 	const char * name; // Object name
 	Surfaces surf;
@@ -42,22 +54,26 @@ public:
 	std::vector<Poly> lines;
 	std::vector<Poly> polygons;
 	std::vector<Vertex> vertices;
+	std::vector<Layer> layers;
 private:
 	int obj;
 	long WriteTag(const char * szTag,const long nSize,const long nElement);
 	void WriteHeader(void);
-	void SortPolygonsBySurfIDs();
 	void CleanupUVMaps(_UVMap ** uvmap, size_t size);
 	void CleanupDVMaps(_DVMap ** dvmap, size_t size);
 	void DumpPoints(void);
 	void DumpPolygons(void);
 	void DumpLines(void);
+	void DumpLayers(Layer2 *layers, size_t count);
 	int DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type, int index);
 	int DumpVMaps(int object);	
 	int DumpImage(Image ** image, LWImageID imgID);
 	int DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID);
 	int DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surfID);
 	void DumpSurfaces(Surface *surf, const LWSurfaceID *surfID, const std::string& prgName);
+	size_t FindSurfaceIndexInSurfIdList(const char* name);
+	//void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, std::vector<Layer::SurfSection>& sections);
+	void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, Layer2::Sections& section);
 public:
 	CMeshExport(GlobalFunc *global);
 	int GetSurfIDList(void);

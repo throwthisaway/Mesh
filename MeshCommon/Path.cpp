@@ -29,8 +29,12 @@ namespace IO
 	}
     void CPath::Combine(const string& path)
     {
+		if (_path.empty()) {
+			_path = Conv(path);
+			return;
+		}
         string::iterator it1 = _path.end();
-        it1--;
+		it1--;
         string convertedPath = Conv(path);
         string::iterator it2= convertedPath.begin();
         if (*it1 != _separator && *it2 != _separator)

@@ -20,7 +20,7 @@ namespace Scene
 {
 
 CMesh::CMesh(ProgramMap& shaders) : shaders(shaders),
-	m_nList(0), error(0), fixedFunc()// ,m_VertexToPolyIndices(NULL)
+	error(0), fixedFunc()
 {
     fixedFunc.handle = 0;
 }
@@ -31,71 +31,16 @@ CMesh::~CMesh(void)
 }
 
 void CMesh::CleanUp(void)
-{	
-	/*if (m_VertexToPolyIndices)
-	{
-		delete [] m_VertexToPolyIndices;
-		m_VertexToPolyIndices = NULL;
-	}*/
-	if (m_nList)
-		glDeleteLists(m_nList, 1);
+{
 	while (m_Editors.size())
 	{	
 		delete m_Editors.back();
 		m_Editors.pop_back();
 	}
-	m_Surfaces.CleanUp();
 	//glDeleteBuffersARB(1, &m_nVBOVertices);
 	glDeleteBuffersARB(1, &m_nVBONormals);
 }
 
-MESH_ERROR CMesh::Load(std::auto_ptr<CMeshLoader> meshLoader)
-{
-	MESHLOADER_ERROR error = FILE_OK;
-	if (!meshLoader.get())	// TODO: auto_ptr ???
-		return MESH_FAIL;
-	m_szName = meshLoader->m_pszMeshName;
-	if (error = meshLoader->LoadVertices(m_Vertices))
-	{
-		Log::CLog::Write("Failed to load vertices...\r\n");
-		CleanUp();
-		return MESH_FAIL;
-	}
-	else if (error = meshLoader->LoadPolygons(m_Polygons))
-	{
-		Log::CLog::Write("Failed to load polygons...\r\n");
-		CleanUp();
-		return MESH_FAIL;
-	}
-	//else if (error = m_MeshLoader->LoadVMaps(m_VMaps))
-	//{
-	//	Log::CLog::Write("Failed to load vmaps...\r\n");
-	//	CleanUp();
-	//}
-	else if (error = meshLoader->_LoadUVMaps(m_VMaps_))
-	{
-		Log::CLog::Write("Failed to load vmaps(2)...\r\n");
-		CleanUp();
-		return MESH_FAIL;
-	}
-	else if (error = meshLoader->_LoadDVMaps(m_VMaps_))
-	{
-		Log::CLog::Write("Failed to load discontinous vmaps...\r\n");
-		CleanUp();
-		return MESH_FAIL;
-	}
-	else if (error = meshLoader->LoadSurfaces(m_Surfaces))
-	{		
-		Log::CLog::Write("Failed to load surfaces...\r\n");
-		CleanUp();
-		return MESH_FAIL;
-	}
-	if (error == FILE_OK)
-	{
-		// TODO:: ...
-	}
-	return MESH_OK;
-}
 #define POLYGONSPOINT(i,n) m_Polygons.m_Polygons[i].Vertices[n]
 #define POINT(i) m_Vertices.m_Vertices[i]
 #define POINTX(i) POINT(i).x
@@ -433,70 +378,73 @@ void CMesh::Draw(void)
 #ifdef _DEBUG
 	_ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
 #endif
-	long i = 0;
+
 	glDisable(GL_TEXTURE_2D);
 	//glEnable(GL_BLEND);
 	//glDisable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-	for (Surface * surf=m_Surfaces.GetSurfaces();i<m_Surfaces.m_nSurfaces; i++, surf++)
-	{
-		// TODO:: iterate through them...
-		CGLSurface * pGLSurface = &_glSurfaces[i];
-		pGLSurface->Setup();
-        _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-		/*for_each(pGLSurface->_enableCaps.begin(), pGLSurface->_enableCaps.end(), glEnable);
-		for_each(pGLSurface->_disableCaps.begin(), pGLSurface->_disableCaps.end(), glDisable);
-		glColor4f(pGLSurface->_color[0], pGLSurface->_color[1], pGLSurface->_color[2], pGLSurface->_color[3]);
-		glCullFace(pGLSurface->_cullFace);
-		pGLSurface->Blend();
-		glColorMaterial(pGLSurface->_frontFace, pGLSurface->_colorMat);
-		glMaterialfv(pGLSurface->_frontFace, GL_SPECULAR,pGLSurface->_spec);
-		glMaterialf(pGLSurface->_frontFace, GL_SHININESS, pGLSurface->_shin);*/
-
-		//SurfInfo& pSpecular = surf->surface_infos[SPECULARITY_MAP];
-		//if (pSpecular.val > .0f)
-		//{
-		//	glEnable(GL_COLOR_MATERIAL);
-		//	GLfloat mat_spec[] = {pSpecular.val, pSpecular.val, pSpecular.val};
-		//	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_spec);
-		//	glMaterialf(GL_FRONT, GL_SHININESS, surf->surface_infos[GLOSSINESS_MAP].val*128.0f);
-		//}
-
-	/*	if (surf->sidedness == SINGLE_SIDED)
+	for(const auto& l : layers) {
 		{
-			glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
-			glEnable(GL_CULL_FACE);
-			glCullFace(GL_BACK);
-			SetupSurface(GL_FRONT, surf);
-			
+			for (size_t i = 0; i < l.poly.n; ++i) {
+				const auto& section = l.poly.sections[i];
+
+				CGLSurface * pGLSurface = &_glSurfaces[section.index];
+				pGLSurface->Setup();
+				_ASSERT_EXPR_A(!(error = glGetError()), (const char*)gluErrorString(error));
+				/*for_each(pGLSurface->_enableCaps.begin(), pGLSurface->_enableCaps.end(), glEnable);
+				for_each(pGLSurface->_disableCaps.begin(), pGLSurface->_disableCaps.end(), glDisable);
+				glColor4f(pGLSurface->_color[0], pGLSurface->_color[1], pGLSurface->_color[2], pGLSurface->_color[3]);
+				glCullFace(pGLSurface->_cullFace);
+				pGLSurface->Blend();
+				glColorMaterial(pGLSurface->_frontFace, pGLSurface->_colorMat);
+				glMaterialfv(pGLSurface->_frontFace, GL_SPECULAR,pGLSurface->_spec);
+				glMaterialf(pGLSurface->_frontFace, GL_SHININESS, pGLSurface->_shin);*/
+
+				//SurfInfo& pSpecular = surf->surface_infos[SPECULARITY_MAP];
+				//if (pSpecular.val > .0f)
+				//{
+				//	glEnable(GL_COLOR_MATERIAL);
+				//	GLfloat mat_spec[] = {pSpecular.val, pSpecular.val, pSpecular.val};
+				//	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_spec);
+				//	glMaterialf(GL_FRONT, GL_SHININESS, surf->surface_infos[GLOSSINESS_MAP].val*128.0f);
+				//}
+
+			/*	if (surf->sidedness == SINGLE_SIDED)
+				{
+					glDisable(GL_VERTEX_PROGRAM_TWO_SIDE);
+					glEnable(GL_CULL_FACE);
+					glCullFace(GL_BACK);
+					SetupSurface(GL_FRONT, surf);
+
+				}
+				else
+				{
+					glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
+					glDisable(GL_CULL_FACE);
+					SetupSurface(GL_FRONT_AND_BACK, surf);
+				}*/
+				pGLSurface->Bind();
+				_ASSERT_EXPR_A(!(error = glGetError()), (const char*)gluErrorString(error));
+				if (CGLExtensions::ShaderSupported)
+				{
+					CGLProgram * pProgram = pGLSurface->_program;
+					glUseProgramObjectARB(pProgram->handle);
+					_ASSERT_EXPR_A(!(error = glGetError()), (const char*)gluErrorString(error));
+					//GLint tex1 = glGetUniformLocationARB(pProgram->handle, "tex1");
+				   //GLint tex2 = glGetUniformLocationARB(pProgram->handle, "tex2");
+				   //GLint tex3 = glGetUniformLocationARB(pProgram->handle, "tex3");
+				   //glUniform1iARB(tex1, 0);
+				   //glUniform1iARB(tex2, 1);
+				   //glUniform1iARB(tex3, 2);
+				}
+				// !!!
+			  //  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+				glDrawArrays(GL_TRIANGLES, section.start * VERTICESPERPOLY, section.count * VERTICESPERPOLY);
+				_ASSERT_EXPR_A(!(error = glGetError()), (const char*)gluErrorString(error));
+				pGLSurface->TearDown();
+				_ASSERT_EXPR_A(!(error = glGetError()), (const char*)gluErrorString(error));
+			}
 		}
-		else
-		{
-			glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-			glDisable(GL_CULL_FACE);
-			SetupSurface(GL_FRONT_AND_BACK, surf);			
-		}*/
-        pGLSurface->Bind();
-         _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-		if (CGLExtensions::ShaderSupported)
-		{
-			CGLProgram * pProgram = pGLSurface->_program;
-			glUseProgramObjectARB(pProgram->handle);
-             _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-		     //GLint tex1 = glGetUniformLocationARB(pProgram->handle, "tex1");
-			//GLint tex2 = glGetUniformLocationARB(pProgram->handle, "tex2");
-			//GLint tex3 = glGetUniformLocationARB(pProgram->handle, "tex3");
-			//glUniform1iARB(tex1, 0);
-			//glUniform1iARB(tex2, 1);
-			//glUniform1iARB(tex3, 2);
-		}
-        // !!!
-      //  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDrawArrays(GL_TRIANGLES, surf->poly_offset * VERTICESPERPOLY , surf->poly_count * VERTICESPERPOLY);
-        _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-		pGLSurface->TearDown();
-        _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-
 	}
 	//glDisable(GL_BLEND);
 	//glDisableClientState( GL_NORMAL_ARRAY );	
@@ -505,242 +453,41 @@ void CMesh::Draw(void)
 	//glPopMatrix();
 }
 
-
-long CMesh::CalcPolygonNormals(void)
-{
-	long polyrefcount = 0;
-	for (long i = 0;i<m_Polygons.GetCount();i++)
-	{		
-		long _point1,_point2,_point3;	//Point indices
-		m_Vertices.GetPoygonRefs()[_point1 = _POLYGONSPOINT(i,0)].count++;
-		m_Vertices.GetPoygonRefs()[_point2 = _POLYGONSPOINT(i,1)].count++;
-		m_Vertices.GetPoygonRefs()[_point3 = _POLYGONSPOINT(i,2)].count++;
-		polyrefcount +=3;
-		CVertex point1 = _POINT(_point1), point2 = _POINT(_point2), point3 = _POINT(_point3);
-		Vector<float>& normal = _POLYGONSNORMAL(i);
-		normal.x = point1.y * (point2.z - point3.z) + point2.y * (point3.z - point1.z) + point3.y * (point1.z - point2.z);
-		normal.y = point1.z * (point2.x - point3.x) + point2.z * (point3.x - point1.x) + point3.z * (point1.x - point2.x);
-		normal.z = point1.x * (point2.y - point3.y) + point2.x * (point3.y - point1.y) + point3.x * (point1.y - point2.y);		
-		// Normalize
-		float r = (float)sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-		if (r>0)
-        {
-		    normal.x /= r;
-		    normal.y /= r;
-		    normal.z /= r;
-        }
-	}
-    for (long i = 0;i<m_Polygons.GetCount();i++)
-	{
-        for (long k = 0;k<VERTICESPERPOLY;k++)
-        {
-            CPolygonRef& polyRef = m_Vertices.GetPoygonRefs()[_POLYGONSPOINT(i,k)];
-            if (!polyRef.indices)
-            {
-                polyRef.indices = new long[polyRef.count];
-                polyRef.count = 0;
-            }
-            polyRef.indices[polyRef.count++] = i;
-        }
-    }
-	return polyrefcount;
-}
-std::auto_ptr<char> CMesh::DumpColoring(void)
-{
-     char* data = new char[GetRawVertexCount()*3];
-    for (long i = 0; i<m_Surfaces.GetCount(); i++)		
-	{
-		Surface * surface = &m_Surfaces.m_Surface[i]; 
-		long poly_end = surface->poly_count + surface->poly_offset;
-		for (long j = surface->poly_offset; j<poly_end; j++)
-        {
-            for (long k = 0; k<VERTICESPERPOLY; k++)
-            {
-                data[(j*VERTICESPERPOLY+k)*3] = surface->color[0]*255;
-                data[(j*VERTICESPERPOLY+k)*3+1] = surface->color[1]*255;
-                data[(j*VERTICESPERPOLY+k)*3+2] = surface->color[2]*255;
-            }
-        }
-    }
-    return std::auto_ptr<char>(data);
-}
-std::auto_ptr<float> CMesh::CalcVertexNormals(void)
-{
-    float* data = new float[GetRawVertexCount()*3];
-	for (long i = 0; i<m_Surfaces.GetCount(); i++)		
-	{
-		Surface * surface = &m_Surfaces.m_Surface[i]; 
-		long poly_end = surface->poly_count + surface->poly_offset;
-		for (long j = surface->poly_offset; j<poly_end; j++)
-		{
-			CPolygon * polygon = m_Polygons.GetPolygon(j);
-			float smoothing = m_Surfaces.m_Surface[i].smoothing;
-            Vector<float> * normal = m_Polygons.GetNormal(j);
-			for (long k = 0; k<VERTICESPERPOLY; k++)
-			{
-				/*Vector<float> * normal1 = m_Vertices.GetNormal(polygon->Vertices[j]);
-				Vector<float> * normal2 = m_Polygons.GetNormal(surface->poly_list[j]);
-				if (CVectorMath<float>::Angle(*normal1, *normal2) <= smoothing)
-				{
-				*/
-               //  The correct way of doing it...
-                data[(j*VERTICESPERPOLY+k)*3] = normal->x;
-                data[(j*VERTICESPERPOLY+k)*3+1] = normal->y;
-                data[(j*VERTICESPERPOLY+k)*3+2] = normal->z;
-                CVertex& vert = m_Vertices.GetVertex(polygon->Vertices[k]);
-                long polyRefCount = m_Vertices.GetPoygonRefs()[polygon->Vertices[k]].count;
-                for (long l = 0;l<polyRefCount;++l)
-                {
-                    CPolygonRef& polyRef = m_Vertices.GetPoygonRefs()[polygon->Vertices[k]];
-                    Vector<float> * polyRefNormal = m_Polygons.GetNormal(polyRef.indices[l]);
-                    if (CVectorMath<float>::Angle(*normal, *polyRefNormal)<smoothing)
-                    {
-                        data[(j*VERTICESPERPOLY+k)*3] += polyRefNormal->x;
-                        data[(j*VERTICESPERPOLY+k)*3+1] += polyRefNormal->y;
-                        data[(j*VERTICESPERPOLY+k)*3+2] += polyRefNormal->z;
-                    }
-                }
-               // ...The correct way of doing it
-
-    //            // Old, erroneous way...
-				//Vector<float>& n = m_Vertices.GetNormal(polygon->Vertices[k]);
-    //            if (n.x == n.y && n.y==n.z)
-    //            {
-    //                n = *normal;
-    //                data[(j*VERTICESPERPOLY+k)*3] = n.x;
-    //                data[(j*VERTICESPERPOLY+k)*3+1] = n.y;
-    //                data[(j*VERTICESPERPOLY+k)*3+2] += n.z;
-    //            }
-    //            else if (CVectorMath<float>::Angle(n, *normal)<=smoothing)
-    //            {
-				//    n += *normal;
-    //                CVectorMath<float>::Normalize(n);
-    //                data[(j*VERTICESPERPOLY+k)*3] = n.x;
-    //                data[(j*VERTICESPERPOLY+k)*3+1] = n.y;
-    //                data[(j*VERTICESPERPOLY+k)*3+2] += n.z;
-    //            }
-    //            // ...Old, erroneous way
-			//vertex_normal.a += polygonRef->indices[j]-
- 			}
-		}
-        // The correct way of doing it...
-        for (long j = 0; j<GetRawVertexCount()*3; j+=3)
-        {
-           float r = data[j] * data[j]  +data[j+1] * data[j+1] + data[j+2] * data[j+2];
-           if (r>0)
-           {
-               data[j] = data[j]/r;
-               data[j+1] = data[j+1]/r;
-               data[j+2] = data[j+2]/r;
-           }
-        } 
-        //...The correct way of doing it
-
-        // Old, erroneous way...
-		if (surface->poly_count>0)
-		{
- 			for (long j = 0; j<m_Vertices.GetCount(); j++)
-			{
-				CVectorMath<float>::Normalize(m_Vertices.GetNormal(j));
-			}
-		}
-        // ...Old, erroneous way
-		//CPolygonRef * polygonRef = &m_Vertices.GetPoygonRefs()[i];
-		//Vector<float> * vertex_normal = &m_Vertices.GetNormal()[i];
-			
-	}
-    return std::auto_ptr<float>(data);
-}
 void CMesh::Setup(unsigned int vbovertices)
-{	
-    // data dump...
-    std::string path(IO::CPath::GetPath(m_szName)), name(IO::CPath::GetFileName(m_szName)), out;
-    out = path+name;
-    CDumpData dump(IO::CPath::SetExt(out, "robo").c_str());
-    // ...data dump
-	long i, c;
-	GLenum error;
-	m_Vertices.Setup();
-	m_Polygons.Setup();
-	//m_VMaps.Setup(m_Surfaces);
-	m_VMaps_.Setup(m_Surfaces, m_Polygons, m_Vertices);
-	long polyrefcount = CalcPolygonNormals();
-	// TODO: if smoothing off...
-	
-	m_nVBOVertices = vbovertices;
-	// Vertices...
-	GLuint size = GetRawVertexCount()*3;
-	/*float **/ data = new float[size];
-	for (i = 0,c = 0; i<m_Polygons.m_nPolygons;i++)
-	{
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[0]).x;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[0]).y;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[0]).z;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[1]).x;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[1]).y;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[1]).z;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[2]).x;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[2]).y;
-		data[c++] = m_Vertices.GetVertex(m_Polygons.GetPolygon(i)->Vertices[2]).z;
-	}
+{
+ 	m_nVBOVertices = vbovertices;
     _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
 	glBindBufferARB( GL_ARRAY_BUFFER_ARB, m_nVBOVertices );
 	_ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-	glBufferDataARB( GL_ARRAY_BUFFER_ARB, size * sizeof(float), data, GL_STATIC_DRAW_ARB );
+	std::vector<XMFLOAT3> data(polygons.size() * VERTICESPERPOLY);
+	for (size_t i = 0, dst = 0; i < polygons.size(); ++i) {
+		data[dst++] = vertices[polygons[i].v[0]];		
+		data[dst++] = vertices[polygons[i].v[1]];
+		data[dst++] = vertices[polygons[i].v[2]];
+	}
+
+	glBufferDataARB( GL_ARRAY_BUFFER_ARB, data.size() * sizeof(XMFLOAT3), &data.front(), GL_STATIC_DRAW_ARB );
 	_ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-	// debug
-	this->c = c;
-	//
-   
-    dump.ExportData(data, size*sizeof(float), true);
-	delete [] data;
 	// Normals...
 	glGenBuffersARB( 1, &m_nVBONormals );
     _ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-    auto_ptr<float> data2 = CalcVertexNormals();
-	// TODO: if smoothing off...
-	//data = new float[size];
-	//for (i = 0,c = 0; i<m_Polygons.m_nPolygons;i++)
-	//{
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[0]).x;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[0]).y;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[0]).z;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[1]).x;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[1]).y;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[1]).z;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[2]).x;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[2]).y;
-	//	data[c++] = m_Vertices.GetNormal(m_Polygons.GetPolygon(i)->Vertices[2]).z;
-	//}
-    
+	std::vector<XMFLOAT3> normals(polygons.size() * VERTICESPERPOLY);
+	for (size_t i = 0, dst = 0; i < polygons.size(); ++i) {
+		// TODO:: ccw hack
+		XMFLOAT3 n;
+		XMStoreFloat3(&n, XMVectorScale(XMLoadFloat3(&normalsV[i].n[0]), -1.f));
+		normals[dst++] = n;
+		XMStoreFloat3(&n, XMVectorScale(XMLoadFloat3(&normalsV[i].n[1]), -1.f));
+		normals[dst++] = n;
+		XMStoreFloat3(&n, XMVectorScale(XMLoadFloat3(&normalsV[i].n[2]), -1.f));
+		normals[dst++] = n;
+	}
+   
 	glBindBufferARB( GL_ARRAY_BUFFER_ARB, m_nVBONormals );
 	_ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-    glBufferDataARB( GL_ARRAY_BUFFER_ARB, size * sizeof(float), data2.get(), GL_STATIC_DRAW_ARB );
+    glBufferDataARB( GL_ARRAY_BUFFER_ARB, normals.size() * sizeof(XMFLOAT3), &normals.front(), GL_STATIC_DRAW_ARB );
 	_ASSERT_EXPR_A(!(error = glGetError()),(const char*)gluErrorString(error));
-    dump.ExportData(data2.get(), size*sizeof(float), TRUE);
 
-    auto_ptr<char> data3 = DumpColoring();
-    dump.ExportData(data3.get(), size*sizeof(char), TRUE);
-	//delete [] data;
-	
-	
-	//m_VertexToPolyIndices = new long[polyrefcount];
-	//// Vertex to polygons...
-	//for (long i = 0,inc = 0; i<m_Vertices.GetCount(); i++)
-	//{		
-	//	CPolygonRef * polygonref = &m_Vertices.GetPoygonRefs()[i];
-	//	polygonref->indices = &m_VertexToPolyIndices[inc];
-	//	inc += polygonref->count;
-	//	polygonref->count = 0;
-	//}
-	//for (long i = 0; i<m_Polygons.GetCount(); i++)
-	//{				
-	//	for (long j = 0; j < VERTICESPERPOLY; j++)
-	//	{
-	//		CPolygonRef * polygonref = &m_Vertices.GetPoygonRefs()[_POLYGONSPOINT(i,j)];
-	//		polygonref->indices[polygonref->count++] = i;
-	//	}		
-	//}
 }
 // Try to load the shaders from the override location
 // default dir.: <shader_dir>/<mesh_name>/<srf_name>.program
@@ -761,13 +508,13 @@ CGLProgram * CMesh::PrgOverride(Surface& srf)
 void CMesh::SetupGLSurfaces(ProgramMap& shaders)
 {
     _glSurfaces.clear();
-	_glSurfaces.reserve(m_Surfaces.GetCount());
-	for (long i = 0; i<m_Surfaces.GetCount();i++)
+	_glSurfaces.reserve(surfaces.size());
+	for (long i = 0; i<surfaces.size();i++)
 	{
 		
-		CGLSurface glSrf(m_Surfaces.GetSurfaces()[i]);
+		CGLSurface glSrf(surfaces[i]);
 		// Shader program
-		Surface * pSrf = &m_Surfaces.GetSurfaces()[i];
+		Surface * pSrf = &surfaces[i];
         CGLProgram * program = PrgOverride(*pSrf);
         if (NULL != program)
             glSrf._program = program;

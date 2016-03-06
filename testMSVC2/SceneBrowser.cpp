@@ -178,15 +178,16 @@ public:
 		// Polygon assignment starting offset
 		bNameValid = tempStr.LoadString(IDS_SURFACE_POLYGON_OFFSET);
 		ASSERT(bNameValid);
-		pProp = new CMFCPropertyGridProperty(tempStr, (COleVariant&)_variant_t(_pSurface->poly_offset));
-		propertiesWnd.m_wndPropList.AddProperty(pProp);
-		pProp->Enable(FALSE);
-		// Assigned polygon count
-		bNameValid = tempStr.LoadString(IDS_SURFACE_POLYGON_COUNT);
-		ASSERT(bNameValid);
-		pProp = new CMFCPropertyGridProperty(tempStr, (COleVariant&)_variant_t(_pSurface->poly_count));
-		pProp->Enable(FALSE);
-		propertiesWnd.m_wndPropList.AddProperty(pProp);
+		// TODO:: _pSurface->poly_offset is obolote, us layer sections
+		//pProp = new CMFCPropertyGridProperty(tempStr, (COleVariant&)_variant_t(_pSurface->poly_offset));
+		//propertiesWnd.m_wndPropList.AddProperty(pProp);
+		//pProp->Enable(FALSE);
+		//// Assigned polygon count
+		//bNameValid = tempStr.LoadString(IDS_SURFACE_POLYGON_COUNT);
+		//ASSERT(bNameValid);
+		//pProp = new CMFCPropertyGridProperty(tempStr, (COleVariant&)_variant_t(_pSurface->poly_count));
+		//pProp->Enable(FALSE);
+		//propertiesWnd.m_wndPropList.AddProperty(pProp);
 
 		// Face culling
 		bNameValid = tempStr.LoadString(IDS_FACE_CULLING);
@@ -668,9 +669,9 @@ void CSceneBrowser::OnSceneOpen(Scene::CGLScene * pGLScene)
 		HTREEITEM hMesh = m_wndTree.InsertItem(pMesh->m_szName.c_str(), 1, 1, hRoot);
 		m_wndTree.SetItemData(hMesh, (DWORD_PTR) new CMeshCommand(pMesh));
 		// Surfaces...
-		for (long j = 0; j < pMesh->GetSurfaces().GetCount(); j++)
+		for (long j = 0; j < pMesh->surfaces.size(); j++)
 		{
-			Surface * pSurface = pMesh->GetSurfaces().GetSurface(j);
+			Surface * pSurface = &pMesh->surfaces[j];
 			CGLSurface * pGLSurface = &pMesh->_glSurfaces[j];
 			HTREEITEM hSurface = m_wndTree.InsertItem(pSurface->name, 2, 2, hMesh);
 			

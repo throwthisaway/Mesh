@@ -150,9 +150,6 @@
     <ClCompile Include="PropertyGridPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Torus.cpp">
-      <Filter>Source Files\GL</Filter>
-    </ClCompile>
     <ClCompile Include="..\MeshView2005\Renderer.cpp">
       <Filter>Source Files\GL</Filter>
     </ClCompile>

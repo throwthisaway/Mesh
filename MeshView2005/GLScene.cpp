@@ -9,6 +9,8 @@
 #include <vector>
 #include <algorithm>
 #include "VectorMath.h"
+#include <memory>
+#include "../../MeshLoader/MeshLoader.h"
 namespace Scene
 {
 #define LINUX_IMAGE_PATH "./Data/Images/"
@@ -157,21 +159,17 @@ int CGLScene::LoadMeshes(int count, const char ** fnames/*"..\\..\\obj\\multilay
 			continue;
 		}
 		Log::CLog::Write("Loading %s...\r\n", fnames[i]);
-#ifdef WIN32
 		std::shared_ptr<CMesh> mesh(new CMesh(m_Shaders));
-        if (mesh->Load(std::auto_ptr<CMeshLoader>(new CMeshLoader(fnames[i]))))
-		{
-			Log::CLog::Write("Mesh load error...\r\n");
-			continue;
-		}
+		std::unique_ptr<IO::CFileReader> fileLoader(IO::CFileReader::Open(fnames[i]));
+		long size = fileLoader->Size();
+		std::vector<char> data(size);
+		fileLoader->Read(&data.front(), size);
+		LoadMesh(&data.front(), size, *mesh.get());
+		mesh->m_szName = fnames[i];
 		//meshes[i].Load( new CMeshLoader("D:\\NewTek\\LightWave 3D 9\\multilayer.mesh"));
 		//meshes[i].Load( new CMeshLoader("D:\\NewTek\\LightWave 3D 9\\bumptest.mesh"));
 		//meshes[i].Load( new CMeshLoader("D:\\NewTek\\LightWave 3D 9\\box-wcheckerboard-2x2.mesh"));
 		//meshes[i].Load( new CMeshLoader("D:\\NewTek\\LightWave 3D 9\\vmap_test.mesh"));
-
-#else
-		meshes[i].Load( new CMeshLoader("../test6.mesh"));
-#endif
 		mesh->Setup( m_pnVBOVertices[i]);
 		//  Bind, bufferdata
 		// texture VBO...

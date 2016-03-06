@@ -162,7 +162,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -192,7 +192,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -224,7 +224,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)MeshCommon;$(SolutionDir)PropertyGrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -259,7 +259,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)MeshCommon;$(SolutionDir)PropertyGrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -294,7 +294,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)MeshView2005;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -327,7 +327,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)MeshView2005;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -355,12 +355,14 @@
     <ClCompile>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
     <ClCompile>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <MinimalRebuild>true</MinimalRebuild>
+      <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -398,7 +400,6 @@
     <ClCompile Include="testMSVC2Doc.cpp" />
     <ClCompile Include="testMSVC2View.cpp" />
     <ClCompile Include="TestView.cpp" />
-    <ClCompile Include="Torus.cpp" />
     <ClCompile Include="ViewTree.cpp" />
     <ClCompile Include="..\MeshView2005\Editor.cpp" />
     <ClCompile Include="..\MeshView2005\GLBitmapFont.cpp" />

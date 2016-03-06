@@ -92,6 +92,20 @@ int cmpDV(const void * p1, const void * p2)
 }
 // ...globals
 //////////////////////////////////////////////
+void CollectPtrLayers(Ser_Base * serBase, Layer2 * layers, size_t arrayLength)
+{
+	size_t i;
+	Ser_Node * serNode;
+	for (i = 0; i < arrayLength; i++) {
+		serNode = serBase->AddSerNode(serBase, &layers[i], sizeof(Layer2));
+		serBase->CollectPtr(serNode, (void**)&(layers[i].poly.sections));
+		serBase->CollectPtr(serNode, (void**)&(layers[i].line.sections));
+	}
+	for (i = 0; i<arrayLength; i++) {
+		serBase->AddSerNode(serBase, layers[i].poly.sections, layers[i].poly.n*sizeof(Layer2::Sections::Section));
+		serBase->AddSerNode(serBase, layers[i].line.sections, layers[i].line.n*sizeof(Layer2::Sections::Section));
+	}
+}
 
 void CollectPtrImage(Ser_Base * serBase, Image * img)
 {
@@ -619,22 +633,22 @@ void CMeshExport::DumpSurfaces(Surface *surf, const LWSurfaceID *surfID, const s
 		CleanupSurface(surf);
 		return;
 	}
-	surf->line_offset = surf->line_count = surf->poly_count = surf->poly_offset = 0;
-	//Find...
-	while ((surf->poly_offset < polygons.size()) && (strcmp(surff->name(*surfID), polygons[surf->poly_offset].surf) != 0)) ++surf->poly_offset;
-	//Count polygons
-	surf->poly_count = surf->poly_offset;
-	while ((surf->poly_count <  polygons.size()) && (strcmp(surff->name(*surfID), polygons[surf->poly_count].surf) == 0)) ++surf->poly_count;
-	surf->poly_count -= surf->poly_offset;
-	if (!surf->poly_count)
-		surf->poly_offset = 0;
-	//Count lines
-	while ((surf->line_offset < lines.size()) && (strcmp(surff->name(*surfID), lines[surf->line_offset].surf) != 0)) ++surf->line_offset;
-	surf->line_count = surf->line_offset;
-	while ((surf->line_count < lines.size()) && (strcmp(surff->name(*surfID), lines[surf->line_count].surf) == 0)) ++surf->line_count;
-	surf->line_count -= surf->line_offset;
-	if (!surf->line_count)
-		surf->line_offset = 0;
+	//surf->line_offset = surf->line_count = surf->poly_count = surf->poly_offset = 0;
+	////Find...
+	//while ((surf->poly_offset < polygons.size()) && (strcmp(surff->name(*surfID), polygons[surf->poly_offset].surf) != 0)) ++surf->poly_offset;
+	////Count polygons
+	//surf->poly_count = surf->poly_offset;
+	//while ((surf->poly_count <  polygons.size()) && (strcmp(surff->name(*surfID), polygons[surf->poly_count].surf) == 0)) ++surf->poly_count;
+	//surf->poly_count -= surf->poly_offset;
+	//if (!surf->poly_count)
+	//	surf->poly_offset = 0;
+	////Count lines
+	//while ((surf->line_offset < lines.size()) && (strcmp(surff->name(*surfID), lines[surf->line_offset].surf) != 0)) ++surf->line_offset;
+	//surf->line_count = surf->line_offset;
+	//while ((surf->line_count < lines.size()) && (strcmp(surff->name(*surfID), lines[surf->line_count].surf) == 0)) ++surf->line_count;
+	//surf->line_count -= surf->line_offset;
+	//if (!surf->line_count)
+	//	surf->line_offset = 0;
 }
 
 CMeshExport::CMeshExport(GlobalFunc *global) :
@@ -698,11 +712,39 @@ void CMeshExport::DumpLines(void)
 		::WriteFile(m_hFile, &l.v2, sizeof(long), &written, NULL);
 	}
 }
-
+void CMeshExport::DumpLayers(Layer2 *layers, size_t count) {
+	//DWORD written = 0;
+	//size_t size = 0;
+	//for (auto& l : layers) {
+	//	size += sizeof(l.pivot);
+	//	size += sizeof(size_t);
+	//	size += l.lineSections.size() * sizeof(l.lineSections);
+	//	size += sizeof(size_t);
+	//	size += l.polySections.size() * sizeof(l.polySections);
+	//}
+	//WriteTag(LAYR, size, layers.size());
+	//for (auto& l : layers)
+	//{
+	//	::WriteFile(m_hFile, &l.pivot, sizeof(l.pivot), &written, NULL);
+	//	size = l.polySections.size();
+	//	::WriteFile(m_hFile, &size, sizeof(size_t), &written, NULL);
+	//	::WriteFile(m_hFile, &l.polySections.front(), sizeof(l.polySections) * l.polySections.size(), &written, NULL);
+	//	size = l.lineSections.size();
+	//	::WriteFile(m_hFile, &size, sizeof(size_t), &written, NULL);
+	//	::WriteFile(m_hFile, &l.lineSections.front(), sizeof(l.lineSections) * l.lineSections.size(), &written, NULL);
+	//}
+	Ser_Base serBase;
+	InitSerBase(&serBase);
+	CollectPtrLayers(&serBase, layers, count);
+	DWORD written = 0;
+	WriteTag(LAYR, serBase.RelocatePtrs(&serBase), count);
+	serBase.Serialize(&serBase, m_hFile);
+	serBase.Release(&serBase);
+}
 int CMeshExport::GetSurfIDList()
 {
 	//Get surfaceID list
-	surff = (LWSurfaceFuncs*)global( LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT );
+	LWSurfaceFuncs *surff = (LWSurfaceFuncs*)global( LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT );
 	surfIDList = surff->byObject(name);
 	surf.m_nSurfaces = 0;
 	while (surfIDList[surf.m_nSurfaces] != NULL) 
@@ -712,9 +754,51 @@ int CMeshExport::GetSurfIDList()
     }
 	return surf.m_nSurfaces;
 }
+size_t CMeshExport::FindSurfaceIndexInSurfIdList(const char* name) {
+	LWSurfaceFuncs *surff = (LWSurfaceFuncs*)global(LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT);
+	size_t i = 0;
+	while (surfIDList[i] != NULL)
+	{
+		const LWSurfaceID surfID = surfIDList[i];
+		if (!strcmp(surff->name(surfID), name))
+			return i;
+		++i;
+	}
+	assert(false);
+	return 0;
+}
+void CMeshExport::GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, Layer2::Sections& section) {
+	std::vector<Layer2::Sections::Section> sections;
+	auto end = start + count;
+	while (start < end) {
+		count = 0u;
+		const char* surf_name = polygons[start].surf;
+		while (start + count < end && surf_name == polygons[start + count].surf) ++count;
+		auto surf_index = FindSurfaceIndexInSurfIdList(surf_name);
+		sections.push_back({TAG(SECT), (unsigned int)surf_index, (unsigned int)((count == 0) ? 0 : start), (unsigned int)count });
+		start += count;
+		++start;
+	}
+	section.n = sections.size();
+	section.sections = (section.n) ? new Layer2::Sections::Section[section.n] : nullptr;
+	std::copy(sections.begin(), sections.end(), section.sections);
+}
 
+//void CMeshExport::GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, std::vector<Layer::SurfSection>& sections) {
+//	auto end = start + count;
+//	while (start < end) {
+//		count = 0u;
+//		const char* surf_name = polygons[start].surf;
+//		while (start + count < end && surf_name == polygons[start + count].surf) ++count;
+//		auto surf_index = FindSurfaceIndexInSurfIdList(surf_name);
+//		sections.push_back({ surf_index, (count == 0) ? 0 : start, count });
+//		start += count;
+//		++start;
+//	}
+//}
 void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 {
+	surff = (LWSurfaceFuncs*)global(LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT);
 	//Get current object	
 	obj = object;
 	name = objFunc->filename(obj);
@@ -770,22 +854,33 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		DumpPoints();
 		layer = 0;
 		PolyScanData psd{ meshInfo, lines, polygons, vertices, layer };
-		while(objFunc->layerExists(object, layer))
+		while (objFunc->layerExists(object, layer))
 		{
 			meshInfo = objFunc->layerMesh(object, layer);
 			if (!meshInfo)
 				continue;
+			auto poly_start = polygons.size(), line_start = lines.size();
 			meshInfo->scanPolys(meshInfo, polygonScan, &psd);
 			if (meshInfo->destroy)
 				meshInfo->destroy(meshInfo);
 			if (!m_bAllLayers)
 				break;
+			LWFVector pivot;
+			objFunc->pivotPoint(object, layer, pivot);
+			size_t poly_count = polygons.size() - poly_start;
+			if (!poly_count) poly_start = 0;
+			size_t line_count = lines.size() - line_start;
+			if (!line_count) line_start = 0;
+			layers.push_back({ { pivot[0], pivot[1], pivot[2] }, { poly_start, poly_count }, { line_start, line_count } });
 			layer++;
 		}
 		auto srfIDCmp = [](const Poly& p1, const Poly& p2) {
 			return strcmp(p1.surf, p2.surf)<0;};
-		std::sort(polygons.begin(), polygons.end(), srfIDCmp);
-		std::sort(lines.begin(), lines.end(), srfIDCmp);
+		for (auto&l : layers) {
+			std::sort(polygons.begin() + l.poly.start, polygons.begin() + l.poly.start + l.poly.count, srfIDCmp);
+			std::sort(lines.begin() + l.line.start, lines.begin() + l.line.start + l.line.count, srfIDCmp);
+		}
+
 		DumpPolygons();
 		DumpLines();
 		DumpVMaps(object);
@@ -794,17 +889,50 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		surf.m_Surface = (Surface*)calloc(surf.m_nSurfaces, sizeof(Surface));
 		// TODO: if !surf.surf...
 		CollectPtrSurface(&serBase, surf.m_Surface, surf.m_nSurfaces);
-		long i = 0;	
+		long i = 0;
 		while (surfIDList[i] != NULL)
-		{	
+		{
 			DumpSurfaces(&surf.m_Surface[i], &surfIDList[i], shaders_to_surfIDs[i]);
-			i++;		
-		}	
+			i++;
+		}
 		WriteTag(SURF,serBase.RelocatePtrs(&serBase),i);
 		serBase.Serialize(&serBase, m_hFile);
 		serBase.Release(&serBase);	
 		CleanupSurfaces(&surf);
 		vmapList.clear();
+
+		// Layers
+		Layer2 *layers2 = new Layer2[layers.size()];
+		size_t count = 0;
+		for (auto& l : layers) {
+			//GatherLayerSurfaceSections(polygons, l.poly.start, l.poly.count, l.polySections);
+			//GatherLayerSurfaceSections(lines, l.line.start, l.line.count, l.lineSections);
+			GatherLayerSurfaceSections(polygons, l.poly.start, l.poly.count, layers2[count].poly);
+			GatherLayerSurfaceSections(lines, l.line.start, l.line.count, layers2[count].line);
+			layers2[count].pivot.x = l.pivot.x;
+			layers2[count].pivot.y = l.pivot.y;
+			layers2[count].pivot.z = l.pivot.z;
+			layers2[count].tag = TAG(LAYR);
+			++count;
+			//l.surfInfo.push_back({});
+			//auto& current = l.surfInfo.back();
+			//current.line.start = l.line.start; current.line.count = l.line.count;
+			//current.poly.start = l.poly.start; current.poly.count = l.poly.count;
+			//auto layerSectionFct = [this](LWSurfaceFuncs *surff, Layer::SurfInfo::Section& section, const LWSurfaceID *surfID) {
+			//	auto end = section.start + section.count;
+			//	while ((section.start < end) && (strcmp(surff->name(*surfID), polygons[section.start].surf) != 0)) ++section.start;
+			//	//Count polygons
+			//	section.count = section.start;
+			//	while ((section.count < polygons.size()) && (strcmp(surff->name(*surfID), polygons[section.count].surf) == 0)) ++section.count;
+			//	section.count -= section.start;
+			//	if (!section.count)
+			//		section.start = 0;
+			//};
+			//layerSectionFct(surff, current->line, surfID);
+			//layerSectionFct(surff, current->poly, surfID);
+		}
+		DumpLayers(layers2, count);
+		delete[] layers2;
 		::CloseHandle(m_hFile);
 	}
 }
