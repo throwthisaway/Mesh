@@ -15,8 +15,7 @@
 #include "propertyGrid.h"
 #include "Path.h"
 #include "Logger.h"
-#include "File.h"
-
+#include "FileWriter.h"
 // CSceneBrowser
 using namespace Scene;
 
@@ -943,7 +942,7 @@ void CSceneBrowser::OnSurfaceOverrideprogram()
         fw->Write((void*)fsName.operator const char *(), fsName.operator const std::string &().length());
         fw->Write((void*)"\n", 1);
         fw->Close();
-    }catch(CFileCannotOpenException& ex)
+    }catch(IO::CFileCannotOpenException&)
     {
          Log::CLog::Write(_T("Cannot create..."));
          return;

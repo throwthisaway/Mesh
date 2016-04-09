@@ -69,7 +69,7 @@ void CMesh::CleanUp(void)
 void SetupSurface(GLenum face, Surface *surf)
 {
 	glEnable(GL_COLOR_MATERIAL);
-	GLfloat specular;
+	//GLfloat specular;
 	glColor3f(surf->color[0], surf->color[1], surf->color[2]);
 	//if ((specular = surf->surface_infos[SPECULARITY_MAP].val) > 0.0f)
 	//{

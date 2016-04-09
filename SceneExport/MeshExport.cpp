@@ -44,7 +44,7 @@ struct PolyScanData {
 	std::vector<Poly>& lines;
 	std::vector<Poly>& polygons;
 	std::vector<Vertex>& vertices;
-	size_t& layer;
+	int& layer;
 };
 size_t polygonScan(void * data, LWPolID polID)
 {
@@ -68,14 +68,14 @@ size_t polygonScan(void * data, LWPolID polID)
 	long v2 = std::distance(std::begin(psd->vertices), it);
 	const char* surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
 	if (vCount == VERTICESPERLINE) {
-		psd->lines.push_back({ v3, v2, 0u, polID, surf, psd->layer });
+		psd->lines.push_back({ v3, v2, 0u, polID, surf, (size_t)psd->layer });
 		return 0;
 	}
 	pntID = meshInfo->polVertex(meshInfo, polID, 2);
 	it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
 	assert(it != std::end(psd->vertices));
 	long v1 = std::distance(std::begin(psd->vertices), it);
-	psd->polygons.push_back({ v1, v2, v3, polID, surf, psd->layer });
+	psd->polygons.push_back({ v1, v2, v3, polID, surf, (size_t)psd->layer });
 	return 0;
 }
 
@@ -289,10 +289,9 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 	}
 	else
 		return 0;
-	int layer;
-	uvmap->nV = dvmap->nV = layer = 0;
-	while(objFunc->layerExists(object, layer))
-	{
+	uvmap->nV = dvmap->nV =  0;
+	for (int layer = 0; layer < objFunc->maxLayers(object); ++layer) {
+		if (!objFunc->layerExists(object, layer)) continue;
 		meshInfo = objFunc->layerMesh(object, layer);
 		if (!meshInfo)
 			continue;
@@ -318,12 +317,11 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 	}
 	uvmap->uv = new UV[uvmap->nV];
 	dvmap->dv = new DV[dvmap->nV];
-	layer = 0;
 	UV *pUV = uvmap->uv;
 	DV *pDV = dvmap->dv;
 	// Get u,v coords
-	while(objFunc->layerExists(object, layer))
-	{
+	for (int layer = 0; layer < objFunc->maxLayers(object); ++layer) {
+		if (!objFunc->layerExists(object, layer)) continue;
 		meshInfo = objFunc->layerMesh(object, layer);
 		if (!meshInfo)
 			continue;
@@ -683,7 +681,7 @@ long CMeshExport::WriteTag(const char * szTag,const long nSize,const long nEleme
 void CMeshExport::DumpPoints(void)
 {
 	DWORD written = 0;
-	WriteTag(PNTS, vertices.size() * 3 * sizeof(float), vertices.size());
+	WriteTag(VERT, vertices.size() * 3 * sizeof(float), vertices.size());
 	for (auto& v : vertices)
 	{
 		::WriteFile(m_hFile, v.pos, sizeof(float) * 3, &written, NULL);
@@ -775,9 +773,9 @@ void CMeshExport::GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t
 		const char* surf_name = polygons[start].surf;
 		while (start + count < end && surf_name == polygons[start + count].surf) ++count;
 		auto surf_index = FindSurfaceIndexInSurfIdList(surf_name);
-		sections.push_back({TAG(SECT), (unsigned int)surf_index, (unsigned int)((count == 0) ? 0 : start), (unsigned int)count });
+		sections.push_back({TAG(SECT), (unsigned int)surf_index, (unsigned int)((count == 0) ? 0 : start), (unsigned int)count});
 		start += count;
-		++start;
+		//++start;
 	}
 	section.n = sections.size();
 	section.sections = (section.n) ? new Layer2::Sections::Section[section.n] : nullptr;
@@ -818,44 +816,40 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		}
 		WriteHeader();
 		// Get point and polygon count...
-		size_t layer = 0;
 		size_t nPolygons = 0, nVertices = 0;
-		while(objFunc->layerExists(object, layer))
-		{
+		for (int layer = 0; layer < objFunc->maxLayers(object); ++layer) {
+			if (!objFunc->layerExists(object, layer)) continue;
 			meshInfo = objFunc->layerMesh(object, layer);
-			if (!meshInfo)
-				continue;
+			if (!meshInfo)	continue;
 			nVertices += meshInfo->numPoints(meshInfo);
 			nPolygons += meshInfo->numPolygons(meshInfo);
 			if (meshInfo->destroy)
 				meshInfo->destroy(meshInfo);
 			if (!m_bAllLayers)
 				break;
-			layer++;
 		}
 		polygons.reserve(nPolygons);
 		vertices.reserve(nVertices);
 		// Scan points...
-		layer = 0;
-		while(objFunc->layerExists(object, layer))
-		{
+		for (int layer = 0; layer < objFunc->maxLayers(object);++layer) {
+			if (!objFunc->layerExists(object, layer)) continue;
 			meshInfo = objFunc->layerMesh(object, layer);
-			if (!meshInfo)
-				continue;
+			if (!meshInfo)	continue;
 			meshInfo->scanPoints(meshInfo, pointScan, this);
 			if (meshInfo->destroy)
 				meshInfo->destroy(meshInfo);
 			if (!m_bAllLayers)
 				break;
-			layer++;
 		}
 		std::sort(vertices.begin(), vertices.end(), [](const Vertex& v1, const Vertex& v2) {
 			return intptr_t(v1.id) < intptr_t(v2.id); });
 		DumpPoints();
-		layer = 0;
-		PolyScanData psd{ meshInfo, lines, polygons, vertices, layer };
-		while (objFunc->layerExists(object, layer))
-		{
+		for (int layer = 0; layer < objFunc->maxLayers(object); ++layer) {
+			if (!objFunc->layerExists(object, layer)) {
+				layers.push_back({});
+				continue;
+			}
+			PolyScanData psd{ meshInfo, lines, polygons, vertices, layer };
 			meshInfo = objFunc->layerMesh(object, layer);
 			if (!meshInfo)
 				continue;
@@ -872,7 +866,6 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 			size_t line_count = lines.size() - line_start;
 			if (!line_count) line_start = 0;
 			layers.push_back({ { pivot[0], pivot[1], pivot[2] }, { poly_start, poly_count }, { line_start, line_count } });
-			layer++;
 		}
 		auto srfIDCmp = [](const Poly& p1, const Poly& p2) {
 			return strcmp(p1.surf, p2.surf)<0;};

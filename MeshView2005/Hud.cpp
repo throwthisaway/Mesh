@@ -1,19 +1,7 @@
-// Hud.cpp: implementation of the CHud class.
-//
-//////////////////////////////////////////////////////////////////////
-
-//#ifdef WIN32
 #include "stdafx.h"
-//#else
-#ifndef WIN32
-#include <stdarg.h>
-#include "intel_compatibility.h"
-#endif
+#include "File.h"
 #include "Hud.h"
 #include "AppConstants.h"
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
 
 namespace Scene
 {
@@ -38,7 +26,7 @@ void CHud::Init(long width, long height, GLhandleARB program)
 	{
 		font.Load(CAppConstants::font_path);
 		m_bShow = font.m_bLoaded;
-	}catch (CFileNotFoundException)
+	}catch (IO::CFileNotFoundException)
 	{
 		Log::CLog::Write("CHud: Can't load font (%s)...\r\n", CAppConstants::font_path);
 		m_bShow = FALSE;

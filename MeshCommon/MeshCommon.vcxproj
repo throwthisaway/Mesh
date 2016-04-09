@@ -144,7 +144,6 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -152,6 +151,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -161,7 +161,6 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_AMD64_;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -181,6 +180,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -198,6 +198,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">
@@ -232,15 +233,18 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\MeshLoader\File.cpp" />
+    <ClCompile Include="..\..\MeshLoader\FileReader.cpp" />
+    <ClCompile Include="..\..\MeshLoader\Img.cpp" />
+    <ClCompile Include="..\..\MeshLoader\Log.cpp" />
     <ClCompile Include="..\..\MeshLoader\MeshLoader.cpp" />
     <ClCompile Include="..\..\MeshLoader\MeshSurface.cpp" />
+    <ClCompile Include="..\..\MeshLoader\Tga.cpp" />
     <ClCompile Include="..\..\MeshLoader\types.cpp" />
     <ClCompile Include="AppConstants.cpp" />
     <ClCompile Include="ConsoleLogger.cpp" />
     <ClCompile Include="EditLogger.cpp" />
-    <ClCompile Include="File.cpp" />
     <ClCompile Include="FileLogger.cpp" />
-    <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="FileWriter.cpp" />
     <ClCompile Include="GLBumpMap.cpp" />
     <ClCompile Include="GLColorMap.cpp" />
@@ -252,26 +256,26 @@
     <ClCompile Include="GLProgram.cpp" />
     <ClCompile Include="GLTextureMap.cpp" />
     <ClCompile Include="GLTypes.cpp" />
-    <ClCompile Include="Img.cpp" />
-    <ClCompile Include="Log.cpp" />
-    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Path.cpp" />
     <ClCompile Include="VectorMath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\MeshLoader\Deserialize.h" />
+    <ClInclude Include="..\..\MeshLoader\File.h" />
+    <ClInclude Include="..\..\MeshLoader\FileReader.h" />
     <ClInclude Include="..\..\MeshLoader\Image.h" />
+    <ClInclude Include="..\..\MeshLoader\Img.h" />
     <ClInclude Include="..\..\MeshLoader\Log.h" />
+    <ClInclude Include="..\..\MeshLoader\Logger.h" />
     <ClInclude Include="..\..\MeshLoader\MeshLoader.h" />
     <ClInclude Include="..\..\MeshLoader\MeshSurface.h" />
     <ClInclude Include="..\..\MeshLoader\pch.h" />
+    <ClInclude Include="..\..\MeshLoader\Tga.h" />
     <ClInclude Include="..\..\MeshLoader\types.h" />
     <ClInclude Include="AppConstants.h" />
     <ClInclude Include="ConsoleLogger.h" />
     <ClInclude Include="EditLogger.h" />
-    <ClInclude Include="File.h" />
     <ClInclude Include="FileLogger.h" />
-    <ClInclude Include="FileReader.h" />
     <ClInclude Include="FileWriter.h" />
     <ClInclude Include="GLBumpMap.h" />
     <ClInclude Include="GLColorMap.h" />
@@ -285,9 +289,7 @@
     <ClInclude Include="GLTextureMap.h" />
     <ClInclude Include="GLTypes.h" />
     <ClInclude Include="HelperMacros.h" />
-    <ClInclude Include="Img.h" />
     <ClInclude Include="LightSourceParameters.h" />
-    <ClInclude Include="Log.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Path.h" />
     <ClInclude Include="VectorMath.h" />

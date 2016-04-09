@@ -14,10 +14,10 @@ class CFileLogger : public CLogger
 	const char * fname;
 	CFileWriter *file;
 public:	
-	CFileLogger(LPCTSTR fname, long mode = FILE_REWRITE);
-	void SetFileName(LPCTSTR);
+	CFileLogger(_LPCTSTR fname, long mode = FILE_REWRITE);
+	void SetFileName(_LPCTSTR);
 	void SetFileMode(long);
-	virtual void Write(LPCTSTR);
+	virtual void Write(_LPCTSTR);
 	virtual void Close();
 	void Flush(void) const;
 	virtual ~CFileLogger();

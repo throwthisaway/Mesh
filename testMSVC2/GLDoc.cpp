@@ -74,8 +74,12 @@ void CGLDoc::Serialize(CArchive& ar)
 		m_pScene->vp.SetupViewport(640, 480);
 		m_pScene->Init(NULL, ::AfxGetInstanceHandle());
 		//const char * fnames[] = /*{"C:\\Content\\Objects\\disc.mesh", "C:\\Content\\Objects\\ball.mesh", "C:\\Content\\Objects\\ball.mesh"};*/{fName, ".\\Objects\\64THUNDE_triple.mesh"};
-        const char * fnames[] = {/*"F:\\install\\3D\\Robot\\robot_only_fixed_centered1.mesh",*/ "f:\\install\\3D\\Objects\\64THUNDE_triple.mesh"/*, ".\\Objects\\box.mesh", ".\\Objects\\64THUNDE_triple.mesh"*/};
-		const Vector<float> pos[] = {/*Vector<float>(0.f, -45.f, 0.f),*/ Vector<float>(0.f, 0.f, 0.f), Vector<float>(-4.f, 0.f, -4.f)};
+        const char * fnames[] = {/*"F:\\install\\3D\\Robot\\robot_only_fixed_centered1.mesh",*/ "f:\\install\\3D\\Objects\\64THUNDE_triple.mesh", 
+			"f:\\install\\3D\\Objects\\layer_test.mesh"
+			/*"f:\\install\\3D\\Objects\\checkerboard.mesh"*/
+			/*, ".\\Objects\\box.mesh", ".\\Objects\\64THUNDE_triple.mesh"*/};
+		const Vector<float> pos[] = {/*Vector<float>(0.f, -45.f, 0.f),*/ Vector<float>(0.f, 0.f, 0.f), Vector<float>(-4.f, 0.f, -4.f),
+			Vector<float>(4.f, 4.f, 4.f) };
 		m_pScene->LoadMeshes(sizeof(fnames)/sizeof(fnames[0]), fnames, pos);
 		/*Scene::CTorus * torus = new Scene::CTorus();
 		torus->Setup(0.5f, 1.5f, 10, 20);

@@ -1,6 +1,5 @@
 #ifndef HELPERMACROS_H_
 #define HELPERMACROS_H_
-#define ID_OK 0x0
 //#define DEL(obj) if (obj) { delete obj; obj = NULL; };
 #define DEL(obj) delete obj; obj = NULL;
 //#define DEL_ARRAY(obj) if (obj) { delete [] obj; obj = NULL; };

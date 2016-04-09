@@ -144,9 +144,6 @@
     <ClCompile Include="..\MeshView2005\Img\GLImageFactory.cpp">
       <Filter>Source Files\GL\Img</Filter>
     </ClCompile>
-    <ClCompile Include="..\MeshView2005\Img\Tga.cpp">
-      <Filter>Source Files\GL\Img</Filter>
-    </ClCompile>
     <ClCompile Include="PropertyGridPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -303,9 +300,6 @@
       <Filter>Header Files\GL\Img</Filter>
     </ClInclude>
     <ClInclude Include="..\MeshView2005\Img\GLImageFactory.h">
-      <Filter>Header Files\GL\Img</Filter>
-    </ClInclude>
-    <ClInclude Include="..\MeshView2005\Img\Tga.h">
       <Filter>Header Files\GL\Img</Filter>
     </ClInclude>
     <ClInclude Include="PropertyGridPane.h">

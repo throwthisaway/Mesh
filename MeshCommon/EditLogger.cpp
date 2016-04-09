@@ -7,7 +7,7 @@ namespace Log
 
 CEditLogger::CEditLogger(HWND parentHWnd) : m_hWnd(NULL), buffer(NULL)
 {
-	m_hWnd = ::CreateWindow(WC_EDIT,_T("Log"), WS_TILEDWINDOW | WS_VISIBLE | WS_VSCROLL | /*WS_SIZEBOX | WS_MAXIMIZEBOX |WS_MINIMIZEBOX |*/ ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL, 0, 650, 900, 300, parentHWnd, NULL, NULL, NULL);
+	m_hWnd = ::CreateWindow(WC_EDIT,__T("Log"), WS_TILEDWINDOW | WS_VISIBLE | WS_VSCROLL | /*WS_SIZEBOX | WS_MAXIMIZEBOX |WS_MINIMIZEBOX |*/ ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL, 0, 650, 900, 300, parentHWnd, NULL, NULL, NULL);
 }
 
 void CEditLogger::Write(LPCTSTR msg)
@@ -16,11 +16,11 @@ void CEditLogger::Write(LPCTSTR msg)
 	int len = ::GetWindowTextLength(m_hWnd);
 	size_t newlen;
 	if (len)
-		p = new TCHAR[newlen = (len + _tcslen(msg) + 1)];
+		p = new TCHAR[newlen = (len + strlen(msg) + 1)];
 	else
-		p = new TCHAR[newlen = (_tcslen(msg) + 1)];
-	::GetWindowText(m_hWnd, p, newlen);
-	_tcscat(p+len, msg);
+		p = new TCHAR[newlen = (strlen(msg) + 1)];
+	::GetWindowText(m_hWnd, p, (int)newlen);
+	strcat(p+len, msg);
 	::SetWindowText(m_hWnd, NULL);	
 	DEL_ARRAY(buffer);
 	buffer = p;

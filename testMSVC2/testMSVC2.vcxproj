@@ -38,6 +38,7 @@
     <ProjectGuid>{8CDF11C4-3FB5-49D1-9D44-F33BE6426D85}</ProjectGuid>
     <RootNamespace>testMSVC2</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'" Label="Configuration">
@@ -82,6 +83,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
     <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
     <PlatformToolset>v140</PlatformToolset>
@@ -164,13 +166,13 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -200,7 +202,6 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MinimalRebuild>true</MinimalRebuild>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
@@ -226,13 +227,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D "_AFXDLL" %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -261,13 +262,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshView2005;$(SolutionDir)PropertyGrid;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D "_AFXDLL" %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -421,7 +422,6 @@
     <ClCompile Include="..\MeshView2005\VMap.cpp" />
     <ClCompile Include="..\MeshView2005\Img\Bmp.cpp" />
     <ClCompile Include="..\MeshView2005\Img\GLImageFactory.cpp" />
-    <ClCompile Include="..\MeshView2005\Img\Tga.cpp" />
     <ClCompile Include="VTest1.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -476,7 +476,6 @@
     <ClInclude Include="..\MeshView2005\VMap.h" />
     <ClInclude Include="..\MeshView2005\Img\Bmp.h" />
     <ClInclude Include="..\MeshView2005\Img\GLImageFactory.h" />
-    <ClInclude Include="..\MeshView2005\Img\Tga.h" />
     <ClInclude Include="VTest1.h" />
   </ItemGroup>
   <ItemGroup>

@@ -207,8 +207,8 @@ int ShowPanel(CMeshExport* meshExport)
 		ID = PAN_CREATE(panf,"Mesh Export");
 		//panf->user_data = meshExport;
 		// Init meshExport...
-		strcpy(output_file_name, "d:\\Projects\\MeshExport\\testMSVC2\\Objects\\out.mesh");
-		strcpy(shader_program_dir, "d:\\Projects\\MeshExport\\testMSVC2\\Shaders\\" /*"C:\\Data\\Shaders"*/);
+		strcpy(output_file_name, "f:\\prg2\\Projects\\MeshExport\\testMSVC2\\Objects\\out.mesh");
+		strcpy(shader_program_dir, "f:\\prg2\\Projects\\MeshExport\\testMSVC2\\Shaders\\" /*"C:\\Data\\Shaders"*/);
 		EnumShaders();
 		convert_to_triangles = 1;
 		meshExport->GetSurfIDList();

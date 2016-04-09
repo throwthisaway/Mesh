@@ -22,17 +22,18 @@
     <ProjectGuid>{30442495-7595-4614-BD42-7EE1C1BB9064}</ProjectGuid>
     <RootNamespace>MeshView2005</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -108,12 +109,12 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;..\..\MeshLoader;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>MeshCommon.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -135,7 +136,6 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>F:\prg2\3rdparty\GSL\include;..\..\MeshLoader;D:\Programs\Microsoft DirectX SDK %28June 2010%29\Include;$(SolutionDir)MeshCommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_AMD64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -163,7 +163,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>MeshCommon.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -189,7 +189,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>MeshCommon.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -235,7 +235,6 @@
     <ClCompile Include="WinEditor.cpp" />
     <ClCompile Include="Img\Bmp.cpp" />
     <ClCompile Include="Img\GLImageFactory.cpp" />
-    <ClCompile Include="Img\Tga.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Center.h" />
@@ -266,7 +265,6 @@
     <ClInclude Include="WinEditor.h" />
     <ClInclude Include="Img\Bmp.h" />
     <ClInclude Include="Img\GLImageFactory.h" />
-    <ClInclude Include="Img\Tga.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MeshView2005.ico" />

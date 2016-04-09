@@ -50,7 +50,7 @@ int CGLImageFactory::LoadImage(const  char * path, Img::CImg *pImg)
         return -1;	
     strcat(path, ++p);
 #else
-    if (CFileReader::Exist(path))
+    if (IO::CFileReader::Exist(path))
     {
         try
         {

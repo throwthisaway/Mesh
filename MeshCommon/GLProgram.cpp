@@ -1,6 +1,3 @@
-#ifndef WIN32
-#include "intel_compatibility.h"
-#endif
 #include "GLProgram.h"
 #include "FileReader.h"
 #include "Log.h"
@@ -71,16 +68,16 @@ void CGLShader::SetSource(const char * src)
 GLsizei CGLShader::Load(const std::string& fname)
 {
 	_fname = fname;
-	CFileReader * fl = NULL;
+	IO::CFileReader * fl = NULL;
 	try
 	{	
-        fl = CFileReader::Open(_fname.c_str());
+        fl = IO::CFileReader::Open(_fname.c_str());
 		DEL_ARRAY(lines);
 		lines = new char[(size = fl->Size()) + 1];
 		fl->Read(lines, size);
 		lines[size] = 0;
 		DEL(fl);
-	}catch(CFileNotFoundException& ex)
+	}catch(IO::CFileNotFoundException& ex)
 	{
 		DEL(fl);
 		Log::CLog::Write(_T("%s\n"),ex.msg.c_str());
@@ -183,13 +180,13 @@ LOAD CGLProgram::Load(const std::string& program_fname, const std::string& progr
 {
 	LOAD res = LOAD_OK;
 	static TCHAR cwd[MAX_PATH + 1] = _T("");
-	CFileReader * fr = NULL;
-	CFileSystem::GetCWD(cwd, MAX_PATH);
+	IO::CFileReader * fr = NULL;
+	IO::CFileSystem::GetCWD(cwd, MAX_PATH);
 	try
 	{
         //CFileSystem::ChDir(program_dir.c_str());
 		fname = std::string(cwd) + IO::CPath::GetCurrentSeparator() + program_dir + program_fname;
-        fr = CFileReader::Open(fname.c_str(), FILE_READ | FILE_TEXT);
+        fr = IO::CFileReader::Open(fname.c_str(), FILE_READ | FILE_TEXT);
 		static TCHAR vs_fname[MAX_PATH+2];
 		static TCHAR fs_fname[MAX_PATH + 2];
 		BOOL read_ok = FALSE;
@@ -224,7 +221,7 @@ LOAD CGLProgram::Load(const std::string& program_fname, const std::string& progr
 		if ((Load(fullPath_vs, fullPath_fs) == LOAD_OK) && CGLProgram::ShaderSupported)
 			res = CreateAndLink();
 
-	}catch (CFileNotFoundException& ex)
+	}catch (IO::CFileNotFoundException& ex)
 	{
 		Log::CLog::Write(_T("CGLProgram::Load: %s...\r\n"), ex.msg.c_str());
 		res = LOAD_ERROR;
@@ -239,7 +236,7 @@ LOAD CGLProgram::LoadPrograms(const std::string& programs_fname, const std::stri
 	LOAD res = LOAD_OK;
 	try
 	{
-		CFileReader *fr = CFileReader::Open(programs_fname.c_str(), FILE_READ | FILE_TEXT);		
+		IO::CFileReader *fr = IO::CFileReader::Open(programs_fname.c_str(), FILE_READ | FILE_TEXT);
         Log::CLog::Write(_T("CGLProgram::LoadPrograms using program dir.: %s\r\n"), program_dir.c_str());
         Log::CLog::Write(_T("CGLProgram::LoadPrograms using shader dir.: %s\r\n"), shader_dir.c_str());
 		static TCHAR fname[MAX_PATH + 1];
@@ -264,7 +261,7 @@ LOAD CGLProgram::LoadPrograms(const std::string& programs_fname, const std::stri
 			//	delete program;
 		}		
 		delete fr;
-	}catch (CFileNotFoundException& ex)
+	}catch (IO::CFileNotFoundException& ex)
 	{
 		Log::CLog::Write(_T("%s...\r\n"),ex.msg);
 		res = LOAD_ERROR;

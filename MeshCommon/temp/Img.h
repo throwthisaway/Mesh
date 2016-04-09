@@ -7,7 +7,7 @@
 
 namespace Img
 {
-	#define ID_IMG_OK ID_OK
+	#define ID_IMG_OK 0
 	#define ID_IMG_UBPP 0x3006
 	typedef enum {PF_UNKNOWN, PF_GREYSCALE8, PF_RGB, PF_RGBA, PF_BGR, PF_BGRA}PIXELFORMAT;
 	

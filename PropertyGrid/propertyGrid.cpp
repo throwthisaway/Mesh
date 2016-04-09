@@ -272,13 +272,13 @@ LPLISTBOXITEM ListBox_GetItemDataSafe(HWND hwnd, INT idx)
 LPTSTR Nestring(LPTSTR str)
 {
     if(NULL == str || _T('\0') == *str) str = _T("");
-	LPTSTR tmp = (LPTSTR)calloc(_tcslen(str) + 1, sizeof(TCHAR));
+	LPTSTR tmp = (LPTSTR)calloc(strlen(str) + 1, sizeof(TCHAR));
 
     if(NULL == tmp)
     {
         return (LPTSTR)calloc(1, sizeof(TCHAR)); 
     }
-    return _tmemmove(tmp, str, _tcslen(str));
+    return _tmemmove(tmp, str, strlen(str));
 }
 
 /// @brief Allocate and store a string array (double-null-terminated string).
@@ -293,7 +293,7 @@ LPTSTR NestringArray(LPTSTR szzStr)
     //Determine total buffer length
     INT iLen = 0;
     //Walk the buffer to find the terminating empty string.
-    for (LPTSTR p = szzStr; *p; (p += _tcslen(p) + 1, iLen = p - szzStr)) ;
+    for (LPTSTR p = szzStr; *p; (p += strlen(p) + 1, iLen = p - szzStr)) ;
 
     //Allocate for array
     LPTSTR tmp = (LPTSTR)calloc(iLen + 1, sizeof(TCHAR));
@@ -483,7 +483,7 @@ static COLORREF GetColor(LPTSTR src)
 {
     INT RVal, GVal, BVal;
     RVal = GVal = BVal = 0;
-    if (_tcslen(src) > 0)
+    if (strlen(src) > 0)
         _stscanf(src, _T("%d,%d,%d"), &RVal, &GVal, &BVal);
 
     return RGB(RVal, GVal, BVal);
@@ -1184,7 +1184,7 @@ static LRESULT CALLBACK DatePicker_Proc(HWND hDate, UINT msg, WPARAM wParam, LPA
                     GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buf, MAX_PATH);
                     _tcscat(buf, _T(" "));
                     DateTime_GetSystemtime(g_lpInst->hwndCtl2, &st);
-                    GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, _T("hh':'mm':'ss tt"), (LPTSTR) (buf + _tcslen(buf)), MAX_PATH - _tcslen(buf));
+                    GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, _T("hh':'mm':'ss tt"), (LPTSTR) (buf + strlen(buf)), MAX_PATH - strlen(buf));
                     AllocatedString_Replace(g_lpInst->lpCurrent->lpszCurValue, buf);
                     ShowWindow(g_lpInst->hwndCtl1, SW_HIDE);
                     ShowWindow(g_lpInst->hwndCtl2, SW_HIDE);
@@ -1553,7 +1553,7 @@ LPTSTR FileDialogItem_ToString(LPPROPGRIDFDITEM lpPgFdItem)
           ps = filter, pe = filter + NELEMS(filter) - 1;
            *psz && ps < pe; psz += iLen + 1)
     {
-        _tmemmove(ps, psz, (iLen = _tcslen(psz)));
+        _tmemmove(ps, psz, (iLen = strlen(psz)));
         ps += iLen;
         *ps++ = _T('\t');
     }
@@ -1692,7 +1692,7 @@ LPTSTR BrowseFolder(HWND hwnd, LPTSTR curPath, LPTSTR title, LPTSTR rootPath)
 static INT ListBox_FindCatalog(HWND hwnd, INT indexStart, LPCTSTR szCatalog)
 {
     _ASSERT(szCatalog);
-    INT ln = _tcslen(szCatalog) + 1;
+    INT ln = strlen(szCatalog) + 1;
     if (ln == 1 || indexStart >= ListBox_GetCount(hwnd))
         return LB_ERR;
 
@@ -2316,7 +2316,7 @@ VOID ListBox_OnSelectComboBox(HWND hwnd, RECT rc, LPLISTBOXITEM pItem)
     MoveWindow(hCombo, rc.left, rc.top, WIDTH(rc), HEIGHT(rc), TRUE);
 
     //Walk the item list and add each string until the empty string
-    for (LPTSTR p = pItem->lpszMisc; *p; p += _tcslen(p) + 1)
+    for (LPTSTR p = pItem->lpszMisc; *p; p += strlen(p) + 1)
     {
         if (CB_ERR == ComboBox_FindStringExact(hCombo, 0, p))
             ComboBox_AddString(hCombo, p);
@@ -2518,15 +2518,15 @@ VOID ListBox_OnCommand(HWND hwnd, INT id, HWND hwndCtl, UINT codeNotify)
 #endif
                     &title, &path, &filter, &ext);
 
-                if (0 < _tcslen(title))
+                if (0 < strlen(title))
                     ofn.lpstrTitle = title;
                 else
                     ofn.lpstrTitle = _T("Select file");
 
-                if (0 < _tcslen(path))
+                if (0 < strlen(path))
                 {
                     //Exclude the filename
-                    for (LPTSTR ptr = path + _tcslen(path) - 1; *ptr; ptr--)
+                    for (LPTSTR ptr = path + strlen(path) - 1; *ptr; ptr--)
                         if (*ptr == _T('\\'))
                         {
                             *ptr = _T('\0');
@@ -2535,7 +2535,7 @@ VOID ListBox_OnCommand(HWND hwnd, INT id, HWND hwndCtl, UINT codeNotify)
                     ofn.lpstrInitialDir = path;
                 }
 
-                if (0 < _tcslen(filter))
+                if (0 < strlen(filter))
                 {
                     //Convert back to double null-terminated string
                     for (LPTSTR ptr = filter; *ptr; ptr++)
@@ -2591,7 +2591,7 @@ VOID ListBox_OnCommand(HWND hwnd, INT id, HWND hwndCtl, UINT codeNotify)
             case PIT_FOLDER:
             {
                 LPTSTR temp = BrowseFolder(hwnd, g_lpInst->lpCurrent->lpszCurValue, _T(""), _T(""));
-                if (0 < _tcslen(temp))
+                if (0 < strlen(temp))
                     AllocatedString_Replace(g_lpInst->lpCurrent->lpszCurValue, temp);
             }
                 break;
@@ -2841,7 +2841,7 @@ VOID Grid_ExpandCatalog(LPCTSTR szCatalog)
 {
     if (NULL != szCatalog)
     {
-        INT ln = _tcslen(szCatalog) + 1; //Check for empty string
+        INT ln = strlen(szCatalog) + 1; //Check for empty string
         if (ln == 1)
             return;
     }
@@ -2867,7 +2867,7 @@ VOID Grid_CollapseCatalog(LPCTSTR szCatalog)
 {
     if (NULL != szCatalog)
     {
-        INT ln = _tcslen(szCatalog) + 1; //Check for empty string
+        INT ln = strlen(szCatalog) + 1; //Check for empty string
         if (ln == 1)
             return;
     }
@@ -3063,7 +3063,7 @@ VOID Grid_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT *lpDIS)
         SetTextColor(lpDIS->hDC, GetSysColor(COLOR_BTNTEXT));
 		RECT rect = {rectCatPart1.left + 6, rectCatPart1.top + 3,
 			rectCatPart1.right - 6, rectCatPart1.bottom + 3};
-        DrawText(lpDIS->hDC, pItem->lpszCatalog, _tcslen(pItem->lpszCatalog),
+        DrawText(lpDIS->hDC, pItem->lpszCatalog, strlen(pItem->lpszCatalog),
             &rect,
             DT_NOCLIP | DT_LEFT | DT_SINGLELINE);
     }
@@ -3082,7 +3082,7 @@ VOID Grid_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT *lpDIS)
 				COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
 		RECT rect = {rectPart1.left + 3, rectPart1.top + 3, rectPart1.right - 3,
 			rectPart1.bottom + 3};
-        DrawText(lpDIS->hDC, pItem->lpszPropName, _tcslen(pItem->lpszPropName),
+        DrawText(lpDIS->hDC, pItem->lpszPropName, strlen(pItem->lpszPropName),
             &rect, DT_NOCLIP | DT_LEFT | DT_SINGLELINE);
 
         DrawBorder(lpDIS->hDC, &rectPart1, BF_TOPRIGHT,
@@ -3167,7 +3167,7 @@ VOID Grid_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT *lpDIS)
                 _stprintf_s(buf, MAX_PATH, szFmt, pgfi.logFont.lfFaceName, PointSize);
 				RECT rect = {rectPart3.left + 3, rectPart3.top + 3,
 					rectPart3.right + 3, rectPart3.bottom + 3};
-                DrawText(lpDIS->hDC, buf, _tcslen(buf),
+                DrawText(lpDIS->hDC, buf, strlen(buf),
                     &rect,
                     DT_NOCLIP | DT_LEFT | DT_SINGLELINE);
 
@@ -3179,7 +3179,7 @@ VOID Grid_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT *lpDIS)
             SetTextColor(lpDIS->hDC, GetSysColor(COLOR_WINDOWTEXT));
 			RECT rect = {rectPart3.left + 3, rectPart3.top + 3,
 				rectPart3.right + 3, rectPart3.bottom + 3};
-            DrawText(lpDIS->hDC, pItem->lpszCurValue, _tcslen(pItem->lpszCurValue),
+            DrawText(lpDIS->hDC, pItem->lpszCurValue, strlen(pItem->lpszCurValue),
                 &rect,
                 DT_NOCLIP | DT_LEFT | DT_SINGLELINE);
         }
@@ -3266,8 +3266,8 @@ INT Grid_OnAddString(LPPROPGRIDITEM pgi)
                 (LPSYSTEMTIME)pgi->lpCurValue, NULL, buf, MAX_PATH);
             _tcscat(buf, _T(" "));
             GetTimeFormat(LOCALE_USER_DEFAULT, 0, (LPSYSTEMTIME)pgi->lpCurValue,
-                _T("hh':'mm':'ss tt"), (LPTSTR) (buf + _tcslen(buf)),
-                MAX_PATH - _tcslen(buf));
+                _T("hh':'mm':'ss tt"), (LPTSTR) (buf + strlen(buf)),
+                MAX_PATH - strlen(buf));
             lpszCurValue = buf;
             break;
     }
@@ -3571,8 +3571,8 @@ LRESULT Grid_OnSetItemData(INT iItem, LPPROPGRIDITEM pgi)
                     (LPSYSTEMTIME)pgi->lpCurValue, NULL, buf, MAX_PATH);
                 _tcscat(buf, _T(" "));
                 GetTimeFormat(LOCALE_USER_DEFAULT, 0, (LPSYSTEMTIME)pgi->lpCurValue,
-                    _T("hh':'mm':'ss tt"), (LPTSTR) (buf + _tcslen(buf)),
-                    MAX_PATH - _tcslen(buf));
+                    _T("hh':'mm':'ss tt"), (LPTSTR) (buf + strlen(buf)),
+                    MAX_PATH - strlen(buf));
                 lpszCurValue = buf;
                 break;
         }
@@ -3883,7 +3883,7 @@ static LRESULT CALLBACK Grid_Proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             else
             {
                 //Walk the catalog list and handle each string until the empty string
-                for (LPTSTR p = (LPTSTR)lParam; *p; p += _tcslen(p) + 1)
+                for (LPTSTR p = (LPTSTR)lParam; *p; p += strlen(p) + 1)
                     Grid_ExpandCatalog((LPCTSTR)p);
             }
         }
@@ -3896,7 +3896,7 @@ static LRESULT CALLBACK Grid_Proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
             else
             {
-                for (LPTSTR p = (LPTSTR)lParam; *p; p += _tcslen(p) + 1)
+                for (LPTSTR p = (LPTSTR)lParam; *p; p += strlen(p) + 1)
                     Grid_CollapseCatalog((LPCTSTR)p);
             }
         }

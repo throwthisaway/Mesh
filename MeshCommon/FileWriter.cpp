@@ -26,11 +26,11 @@ CFileWriter * CFileWriter::Open(const char * fname, long mode)
 	return new CFileWriter(f, fname);
 }
 
-long CFileWriter::Write(void * data, long count)
+size_t CFileWriter::Write(void * data, size_t count)
 {
 	if (!IsOpened())
 		throw new CFileCannotOpenException(fname);
-	return (long)fwrite(data, count, 1, f);
+	return fwrite(data, count, 1, f);
 }
 void CFileWriter::Flush()
 {	

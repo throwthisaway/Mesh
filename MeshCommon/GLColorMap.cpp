@@ -12,7 +12,7 @@ namespace Scene
 
 	CGLColorMap::~CGLColorMap(void)
 	{
-		DEL(_pImg);
+		delete _pImg;
 	}
 	void CGLColorMap::Bind(GLenum nAct)
 	{

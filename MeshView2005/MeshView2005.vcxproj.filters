@@ -75,9 +75,6 @@
     <ClCompile Include="Img\GLImageFactory.cpp">
       <Filter>Source Files\Img</Filter>
     </ClCompile>
-    <ClCompile Include="Img\Tga.cpp">
-      <Filter>Source Files\Img</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -162,9 +159,6 @@
       <Filter>Header Files\Img</Filter>
     </ClInclude>
     <ClInclude Include="Img\GLImageFactory.h">
-      <Filter>Header Files\Img</Filter>
-    </ClInclude>
-    <ClInclude Include="Img\Tga.h">
       <Filter>Header Files\Img</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h">

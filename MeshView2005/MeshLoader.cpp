@@ -60,7 +60,7 @@ namespace Scene
 //{
 //	MESHLOADER_ERROR error;
 //	CChunk chunk;
-//	if (error = LoadChunk(PNTS,&chunk))
+//	if (error = LoadChunk(VERT,&chunk))
 //		return error;
 //	if (!chunk.element)
 //		return FILE_NO_DATA;

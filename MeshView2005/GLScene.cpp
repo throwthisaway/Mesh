@@ -4,8 +4,9 @@
 #include "GLScene.h"
 #include "w32types.h"
 #include "EditLogger.h"
+#include "FileLogger.h"
 #include "AppConstants.h"
-#include "Img\\Tga.h"
+#include "Tga.h"
 #include <vector>
 #include <algorithm>
 #include "VectorMath.h"
