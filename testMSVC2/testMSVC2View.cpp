@@ -49,7 +49,7 @@ void CtestMSVC2View::OnInitialUpdate()
 
 	::DeleteObject(m_fnt.Detach());
 
-	LOGFONT lf;
+//	LOGFONT lf;
 	
 	int nHeight = -MulDiv(10, GetDeviceCaps(this->GetDC()->GetSafeHdc(), LOGPIXELSY), 72);
 

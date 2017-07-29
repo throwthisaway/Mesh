@@ -8,254 +8,256 @@
 #include <algorithm>
 #include "HelperMacros.h"
 #include <assert.h>
+using namespace MeshLoader;
 //////////////////////////////////////////////
 // globals...
 #define CHUNKHEADERSIZE sizeof(long)*3
-const char * lwSurfMapTypes[]=  {SURF_COLR,SURF_LUMI,			SURF_DIFF,	SURF_SPEC,			SURF_GLOS,		 SURF_REFL,			SURF_TRAN,			 SURF_RIND,						SURF_TRNL,			 SURF_BUMP,NULL};
-const MAP_TYPE meshMapTypes[]={COLOR_MAP,LUMINOSITY_MAP,DIFFUSE_MAP,SPECULARITY_MAP,GLOSSINESS_MAP,REFLECTION_MAP,TRANSPARENCY_MAP,REFRACTION_INDEX_MAP,TRANSLUCENCY_MAP,BUMP_MAP}; //LW surface map type equvivalents
-const std::string CMeshExport::defPrg("Default.program");
+namespace {
+	const char * lwSurfMapTypes[] = { SURF_COLR,SURF_LUMI,			SURF_DIFF,	SURF_SPEC,			SURF_GLOS,		 SURF_REFL,			SURF_TRAN,			 SURF_RIND,						SURF_TRNL,			 SURF_BUMP,NULL };
+	const MAP_TYPE meshMapTypes[] = { COLOR_MAP,LUMINOSITY_MAP,DIFFUSE_MAP,SPECULARITY_MAP,GLOSSINESS_MAP,REFLECTION_MAP,TRANSPARENCY_MAP,REFRACTION_INDEX_MAP,TRANSLUCENCY_MAP,BUMP_MAP }; //LW surface map type equvivalents
 
-int cmpVert2(const void * v1, const void * v2)
-{
-	// TODO:: point index must be smaller than 2^31 !!!
-	return (int)v1 - (int)((Vertex*)v2)->id;
-}
+	//int cmpVert2(const void * v1, const void * v2)
+	//{
+	//	// TODO:: point index must be smaller than 2^31 !!!
+	//	return (int)v1 - (int)((Vertex*)v2)->id;
+	//}
 
-size_t pointScan(void * data, LWPntID pntID)
-{	
-	CMeshExport * meshExport = (CMeshExport*)data;
-	LWFVector vector;
-	meshExport->meshInfo->pntBasePos(meshExport->meshInfo, pntID, vector);
-	meshExport->vertices.push_back({ { vector[0], vector[1], -vector[2] }, pntID });
-	return 0;
-}
-
-//long pointIndex(Vertex * vertices, LWPntID pntID, long cVertex)
-//{
-//	return (Vertex *)bsearch(pntID, vertices, cVertex, sizeof(Vertex), cmpVert2)-vertices;
-//}
-//
-//int cmpPoly(const void * p1, const void * p2)
-//{
-//	return strcmp(((Poly*)p1)->surf, ((Poly*)p2)->surf);
-//}
-struct PolyScanData {
-	LWMeshInfo * meshInfo;
-	std::vector<Poly>& lines;
-	std::vector<Poly>& polygons;
-	std::vector<Vertex>& vertices;
-	int& layer;
-};
-size_t polygonScan(void * data, LWPolID polID)
-{
-	PolyScanData * psd = (PolyScanData*)data;
-	LWMeshInfo * meshInfo = psd->meshInfo;
-	if (meshInfo->polType(meshInfo, polID) != LWPOLTYPE_FACE)
+	size_t pointScan(void * data, LWPntID pntID)
+	{
+		CMeshExport * meshExport = (CMeshExport*)data;
+		LWFVector vector;
+		meshExport->meshInfo->pntBasePos(meshExport->meshInfo, pntID, vector);
+		meshExport->vertices.push_back({ { vector[0], vector[1], -vector[2] }, pntID });
 		return 0;
-	auto vCount = meshInfo->polSize(meshInfo, polID);
-	if (vCount != VERTICESPERPOLY && vCount != VERTICESPERLINE)
-		return 0;
-	auto less = [](const Vertex& v1, const LWPntID& id) {
-		return v1.id < id;
+	}
+
+	//long pointIndex(Vertex * vertices, LWPntID pntID, long cVertex)
+	//{
+	//	return (Vertex *)bsearch(pntID, vertices, cVertex, sizeof(Vertex), cmpVert2)-vertices;
+	//}
+	//
+	//int cmpPoly(const void * p1, const void * p2)
+	//{
+	//	return strcmp(((Poly*)p1)->surf, ((Poly*)p2)->surf);
+	//}
+	struct PolyScanData {
+		LWMeshInfo * meshInfo;
+		std::vector<Poly>& lines;
+		std::vector<Poly>& polygons;
+		std::vector<Vertex>& vertices;
+		int& layer;
 	};
-	LWPntID pntID = meshInfo->polVertex(meshInfo, polID, 0);
-	auto it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
-	assert(it != std::end(psd->vertices));
-	long v3 = std::distance(std::begin(psd->vertices), it);
-	pntID = meshInfo->polVertex(meshInfo, polID, 1);
-	it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
-	assert(it != std::end(psd->vertices));
-	long v2 = std::distance(std::begin(psd->vertices), it);
-	const char* surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
-	if (vCount == VERTICESPERLINE) {
-		psd->lines.push_back({ v3, v2, 0u, polID, surf, (size_t)psd->layer });
+	size_t polygonScan(void * data, LWPolID polID)
+	{
+		PolyScanData * psd = (PolyScanData*)data;
+		LWMeshInfo * meshInfo = psd->meshInfo;
+		if (meshInfo->polType(meshInfo, polID) != LWPOLTYPE_FACE)
+			return 0;
+		auto vCount = meshInfo->polSize(meshInfo, polID);
+		if (vCount != VERTICESPERPOLY && vCount != VERTICESPERLINE)
+			return 0;
+		auto less = [](const Vertex& v1, const LWPntID& id) {
+			return v1.id < id;
+		};
+		LWPntID pntID = meshInfo->polVertex(meshInfo, polID, 0);
+		auto it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
+		assert(it != std::end(psd->vertices));
+		index_t v3 = (index_t)std::distance(std::begin(psd->vertices), it);
+		pntID = meshInfo->polVertex(meshInfo, polID, 1);
+		it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
+		assert(it != std::end(psd->vertices));
+		index_t v2 = (index_t)std::distance(std::begin(psd->vertices), it);
+		const char* surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
+		if (vCount == VERTICESPERLINE) {
+			psd->lines.push_back({ v3, v2, 0u, polID, surf, (size_t)psd->layer });
+			return 0;
+		}
+		pntID = meshInfo->polVertex(meshInfo, polID, 2);
+		it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
+		assert(it != std::end(psd->vertices));
+		index_t v1 = (index_t)std::distance(std::begin(psd->vertices), it);
+		psd->polygons.push_back({ v1, v2, v3, polID, surf, (size_t)psd->layer });
 		return 0;
 	}
-	pntID = meshInfo->polVertex(meshInfo, polID, 2);
-	it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
-	assert(it != std::end(psd->vertices));
-	long v1 = std::distance(std::begin(psd->vertices), it);
-	psd->polygons.push_back({ v1, v2, v3, polID, surf, (size_t)psd->layer });
-	return 0;
-}
 
-int cmpUV(const void * p1, const void * p2)
-{
-	// TODO:: point index must be smaller than 2^31 !!!
-	return ((UV*)p1)->point - ((UV*)p2)->point;
-}
-
-int cmpDV(const void * p1, const void * p2)
-{
-	// TODO:: point index must be smaller than 2^31 !!!
-	return ((DV*)p1)->poly - ((DV*)p2)->poly;
-}
-// ...globals
-//////////////////////////////////////////////
-void CollectPtrLayers(Ser_Base * serBase, Layer2 * layers, size_t arrayLength)
-{
-	size_t i;
-	Ser_Node * serNode;
-	for (i = 0; i < arrayLength; i++) {
-		serNode = serBase->AddSerNode(serBase, &layers[i], sizeof(Layer2));
-		serBase->CollectPtr(serNode, (void**)&(layers[i].poly.sections));
-		serBase->CollectPtr(serNode, (void**)&(layers[i].line.sections));
-	}
-	for (i = 0; i<arrayLength; i++) {
-		serBase->AddSerNode(serBase, layers[i].poly.sections, layers[i].poly.n*sizeof(Layer2::Sections::Section));
-		serBase->AddSerNode(serBase, layers[i].line.sections, layers[i].line.n*sizeof(Layer2::Sections::Section));
-	}
-}
-
-void CollectPtrImage(Ser_Base * serBase, Image * img)
-{
-	Ser_Node * serNode = serBase->AddSerNode(serBase, img, sizeof(Image));
-	serBase->CollectPtr(serNode, (void**)&(img->path));
-}
-
-void CollectPtrUVMaps(Ser_Base * serBase, _UVMap * uvMap, size_t arrayLength)
-{
-	size_t i;
-	Ser_Node * serNode;
-	//Add the UVMap array to the node list
-	//serBase->AddSerNode(serBase, uvMap, sizeof(UVMap) * arrayLength);
-	for (i = 0;i<arrayLength;i++)
+	int cmpUV(const void * p1, const void * p2)
 	{
-		serNode = serBase->AddSerNode(serBase, &uvMap[i], sizeof(_UVMap));
-		serBase->CollectPtr(serNode, (void**)&(uvMap[i].uv));		
+		// TODO:: point index must be smaller than 2^31 !!!
+		return ((UV*)p1)->point - ((UV*)p2)->point;
+	}
+
+	int cmpDV(const void * p1, const void * p2)
+	{
+		// TODO:: point index must be smaller than 2^31 !!!
+		return ((DV*)p1)->poly - ((DV*)p2)->poly;
+	}
+	// ...globals
+	//////////////////////////////////////////////
+	void CollectPtrLayers(Ser_Base * serBase, MeshLoader::Layer * layers, size_t arrayLength)
+	{
+		size_t i;
+		Ser_Node * serNode;
+		for (i = 0; i < arrayLength; i++) {
+			serNode = serBase->AddSerNode(serBase, &layers[i], sizeof(MeshLoader::Layer));
+			serBase->CollectPtr(serNode, (void**)&(layers[i].poly.sections));
+			serBase->CollectPtr(serNode, (void**)&(layers[i].line.sections));
+		}
+		for (i = 0; i < arrayLength; i++) {
+			serBase->AddSerNode(serBase, layers[i].poly.sections, layers[i].poly.count * sizeof(MeshLoader::Layer::Sections::Section));
+			serBase->AddSerNode(serBase, layers[i].line.sections, layers[i].line.count * sizeof(MeshLoader::Layer::Sections::Section));
+		}
+	}
+
+	void CollectPtrImage(Ser_Base * serBase, Image * img)
+	{
+		Ser_Node * serNode = serBase->AddSerNode(serBase, img, sizeof(Image));
+		serBase->CollectPtr(serNode, (void**)&(img->path));
+	}
+
+	void CollectPtrUVMaps(Ser_Base * serBase, _UVMap * uvMap, size_t arrayLength)
+	{
+		size_t i;
+		Ser_Node * serNode;
+		//Add the UVMap array to the node list
+		//serBase->AddSerNode(serBase, uvMap, sizeof(UVMap) * arrayLength);
+		for (i = 0; i < arrayLength; i++)
+		{
+			serNode = serBase->AddSerNode(serBase, &uvMap[i], sizeof(_UVMap));
+			serBase->CollectPtr(serNode, (void**)&(uvMap[i].uv));
 #ifdef _TAG
-		uvMap[i].tag = TAG(VMP2);
+			uvMap[i].tag = Tag(VMP2);
 #endif
+		}
 	}
-}
 
-void CollectPtrDVMaps(Ser_Base * serBase, _DVMap * dvMap, size_t arrayLength)
-{
-	size_t i;
-	Ser_Node * serNode;
-	for (i = 0;i<arrayLength;i++)
+	void CollectPtrDVMaps(Ser_Base * serBase, _DVMap * dvMap, size_t arrayLength)
 	{
-		serNode = serBase->AddSerNode(serBase, &dvMap[i], sizeof(_DVMap));
-		serBase->CollectPtr(serNode, (void**)&(dvMap[i].dv));		
+		size_t i;
+		Ser_Node * serNode;
+		for (i = 0; i < arrayLength; i++)
+		{
+			serNode = serBase->AddSerNode(serBase, &dvMap[i], sizeof(_DVMap));
+			serBase->CollectPtr(serNode, (void**)&(dvMap[i].dv));
 #ifdef _TAG
-		dvMap[i].tag = TAG(DVMP);
+			dvMap[i].tag = Tag(DVMP);
 #endif
+		}
 	}
-}
 
-void CollectPtrSurface(Ser_Base * serBase, Surface * surf, size_t arrayLength)
-{
-	for (unsigned int i = 0;i<arrayLength;i++)
+	void CollectPtrSurface(Ser_Base * serBase, Surface * surf, size_t arrayLength)
 	{
-		Ser_Node * serNode = serBase->AddSerNode(serBase, &surf[i], sizeof(Surface));
-		serBase->CollectPtr(serNode, (void**)&(surf[i].surface_infos)); // Only the address needed now...
-		serBase->CollectPtr(serNode, (void**)&(surf[i].reflection_map));
-		serBase->CollectPtr(serNode, (void**)&(surf[i].refraction_map));
-		serBase->CollectPtr(serNode, (void**)&(surf[i].name));
-		serBase->CollectPtr(serNode, (void**)&(surf[i].program_name));
-		//serBase->CollectPtr(serNode, (void**)&(surf[i].poly_list));
+		for (unsigned int i = 0; i < arrayLength; i++)
+		{
+			Ser_Node * serNode = serBase->AddSerNode(serBase, &surf[i], sizeof(Surface));
+			serBase->CollectPtr(serNode, (void**)&(surf[i].surface_infos)); // Only the address needed now...
+			serBase->CollectPtr(serNode, (void**)&(surf[i].reflection_map));
+			serBase->CollectPtr(serNode, (void**)&(surf[i].refraction_map));
+			serBase->CollectPtr(serNode, (void**)&(surf[i].name));
+			serBase->CollectPtr(serNode, (void**)&(surf[i].program_name));
+			//serBase->CollectPtr(serNode, (void**)&(surf[i].poly_list));
 #ifdef _TAG
-		surf[i].tag = TAG(SRFC);
+			surf[i].tag = Tag(SRFC);
+#endif	
+		}
+	}
+
+	void CollectPtrSurfaces(Ser_Base * serBase, Surfaces * surf)
+	{
+		Ser_Node * serNode = serBase->AddSerNode(serBase, surf, sizeof(Surfaces));
+		serBase->CollectPtr(serNode, (void**)&(surf->surface));	// !!!TEST
+	}
+	void CollectPtrSurfaceInfo(Ser_Base *serBase, SurfInfo * surfInfo, size_t arrayLength)
+	{
+		Ser_Node * serNode = serBase->AddSerNode(serBase, surfInfo, sizeof(SurfInfo) * arrayLength);
+		for (unsigned int i = 0; i < arrayLength; i++)
+		{
+			serBase->CollectPtr(serNode, (void**)&(surfInfo[i].layers));
+			//serBase->CollectPtr(serNode, (void**)&(surfInfo->next));
+#ifdef _TAG
+			surfInfo[i].tag = Tag(SINF);
+#endif	
+		}
+	}
+
+	void CollectPtrSurfaceLayer(Ser_Base * serBase, SurfLayer * surfLayer)
+	{
+		Ser_Node * serNode = serBase->AddSerNode(serBase, surfLayer, sizeof(SurfLayer));
+		serBase->CollectPtr(serNode, (void**)&(surfLayer->image));
+		serBase->CollectPtr(serNode, (void**)&(surfLayer->next));
+#ifdef _TAG
+		surfLayer->tag = Tag(SLYR);
 #endif	
 	}
-}
 
-void CollectPtrSurfaces(Ser_Base * serBase, Surfaces * surf)
-{
-	Ser_Node * serNode = serBase->AddSerNode(serBase, surf, sizeof(Surfaces));
-	serBase->CollectPtr(serNode, (void**)&(surf->m_Surface));	// !!!TEST
-}
-void CollectPtrSurfaceInfo(Ser_Base *serBase, SurfInfo * surfInfo, size_t arrayLength)
-{
-	Ser_Node * serNode = serBase->AddSerNode(serBase, surfInfo, sizeof(SurfInfo) * arrayLength);
-	for (unsigned int i = 0;i<arrayLength;i++)
-	{		
-		serBase->CollectPtr(serNode, (void**)&(surfInfo[i].layers));
-		//serBase->CollectPtr(serNode, (void**)&(surfInfo->next));
+	void CollectPtrRefMap(Ser_Base * serBase, RefMap * refMap)
+	{
+		Ser_Node * serNode = serBase->AddSerNode(serBase, refMap, sizeof(RefMap));
+		serBase->CollectPtr(serNode, (void**)&(refMap->map));
 #ifdef _TAG
-		surfInfo[i].tag = TAG(SINF);
+		refMap->tag = Tag(RMAP);
 #endif	
 	}
-}
 
-void CollectPtrSurfaceLayer(Ser_Base * serBase, SurfLayer * surfLayer)
-{
-	Ser_Node * serNode = serBase->AddSerNode(serBase, surfLayer, sizeof(SurfLayer));
-	serBase->CollectPtr(serNode, (void**)&(surfLayer->image));
-	serBase->CollectPtr(serNode, (void**)&(surfLayer->next));
-#ifdef _TAG
-	surfLayer->tag = TAG(SLYR);
-#endif	
-}
-
-void CollectPtrRefMap(Ser_Base * serBase, RefMap * refMap)
-{
-	Ser_Node * serNode = serBase->AddSerNode(serBase,refMap, sizeof(RefMap));
-	serBase->CollectPtr(serNode, (void**)&(refMap->map));
-#ifdef _TAG
-	refMap->tag = TAG(RMAP);
-#endif	
-}
-
-void CleanupImage(Image * img)
-{
-	free(img);
-}
-
-void CleanupSurfLayers(SurfLayer **layer)
-{
-	while (*layer)
+	void CleanupImage(Image * img)
 	{
-		CleanupSurfLayers(&(*layer)->next);
-		CleanupImage((*layer)->image);
-		free(*layer);
-		*layer=NULL;
+		free(img);
+	}
+
+	void CleanupSurfLayers(SurfLayer **layer)
+	{
+		while (*layer)
+		{
+			CleanupSurfLayers(&(*layer)->next);
+			CleanupImage((*layer)->image);
+			free(*layer);
+			*layer = NULL;
+		}
+	}
+
+	void CleanupSurfaceInfos(SurfInfo **surface_infos)
+	{
+		for (unsigned int i = 0; i < NUM_MAP_TYPE; i++)
+		{
+			//CleanupSurfaceInfos(&((*surface_infos)->next));
+			CleanupSurfLayers(&((*surface_infos)[i].layers));
+		}
+		free(*surface_infos);
+		*surface_infos = NULL;
+	}
+	void CleanepRefMap(RefMap ** ref_map)
+	{
+		if (!(*ref_map))
+			return;
+		if ((*ref_map)->map)
+			CleanupImage((*ref_map)->map);
+		if (*ref_map)
+		{
+			free(*ref_map);
+			*ref_map = NULL;
+		}
+	}
+	void CleanupSurface(Surface *surf)
+	{
+		//if (surf->poly_list)
+		//	free(surf->poly_list);
+		CleanepRefMap(&(surf->reflection_map));
+		CleanepRefMap(&(surf->refraction_map));
+		CleanupSurfaceInfos(&(surf->surface_infos));
+		// TODO:
+	}
+
+	void CleanupSurfaces(Surfaces *surf)
+	{
+		int count = surf->count;
+		while (count)
+		{
+			CleanupSurface(&surf->surface[--count]);
+		}
+		free(surf->surface);
+		surf->surface = NULL;
 	}
 }
-
-void CleanupSurfaceInfos(SurfInfo **surface_infos)
-{
-	for (unsigned int i = 0; i<NUM_MAP_TYPE; i++)
-	{
-		//CleanupSurfaceInfos(&((*surface_infos)->next));
-		CleanupSurfLayers(&((*surface_infos)[i].layers));	
-	}	
-	free(*surface_infos);
-	*surface_infos=NULL;
-}
-void CleanepRefMap(RefMap ** ref_map)
-{
-	if (!(*ref_map))
-		return;
-	if ((*ref_map)->map)
-		CleanupImage((*ref_map)->map);
-	if (*ref_map)
-	{
-		free(*ref_map);
-		*ref_map = NULL;
-	}
-}
-void CleanupSurface(Surface *surf)
-{
-	//if (surf->poly_list)
-	//	free(surf->poly_list);
-	CleanepRefMap(&(surf->reflection_map));
-	CleanepRefMap(&(surf->refraction_map));
-	CleanupSurfaceInfos(&(surf->surface_infos));
-	// TODO:
-}
-
-void CleanupSurfaces(Surfaces *surf)
-{
-	int count = surf->m_nSurfaces;
-	while (count)
-	{
-		CleanupSurface(&surf->m_Surface[--count]);				
-	}
-	free(surf->m_Surface);
-	surf->m_Surface = NULL;
-}
-
+const std::string CMeshExport::defPrg("Default.program");
 void CMeshExport::CleanupUVMaps(_UVMap ** uvmap, size_t size)
 {	
 	if(uvmap && *uvmap)
@@ -279,35 +281,33 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 	float pfData[2];
 	const char * name;	
 	LWObjectFuncs * objFunc = (LWObjectFuncs*)global( LWOBJECTFUNCS_GLOBAL, GFUSE_TRANSIENT );
-	void * _uvmap;
-	if (objFunc->layerExists(object, 0))
-	{
+	LWID _uvmap;
+	if (objFunc->layerExists(object, 0)) {
 		meshInfo = objFunc->layerMesh(object, 0);
 		name =	objFunc->vmapName(type, index);
-		_uvmap = meshInfo->pntVLookup( meshInfo, type, name );
-		vmapList.push_back((LWID)_uvmap);
+		_uvmap = reinterpret_cast<LWID>(meshInfo->pntVLookup( meshInfo, type, name ));
+		vmapList.push_back(_uvmap);
 	}
-	else
-		return 0;
-	uvmap->nV = dvmap->nV =  0;
+	else return 0;
+	uvmap->count = dvmap->count =  0;
 	for (int layer = 0; layer < objFunc->maxLayers(object); ++layer) {
 		if (!objFunc->layerExists(object, layer)) continue;
 		meshInfo = objFunc->layerMesh(object, layer);
 		if (!meshInfo)
 			continue;
-		meshInfo->pntVSelect(meshInfo, _uvmap);
+		meshInfo->pntVSelect(meshInfo, reinterpret_cast<void*>(_uvmap));
 		for (unsigned long i = 0;i<vertices.size();i++)
 		{
 			if (meshInfo->pntVGet(meshInfo, vertices[i].id, pfData))
-				uvmap->nV++;
+				uvmap->count++;
 		}
 		for (size_t i = 0; i<polygons.size();i++) {
 			if (meshInfo->pntVPGet(meshInfo, vertices[polygons[i].v1].id, polygons[i].id, pfData))
-				++dvmap->nV;
+				++dvmap->count;
 			if (meshInfo->pntVPGet(meshInfo, vertices[polygons[i].v2].id, polygons[i].id, pfData))
-				++dvmap->nV;
+				++dvmap->count;
 			if (meshInfo->pntVPGet(meshInfo, vertices[polygons[i].v3].id, polygons[i].id, pfData))
-				++dvmap->nV;
+				++dvmap->count;
 		}
 		if (meshInfo->destroy)
 			meshInfo->destroy(meshInfo);
@@ -315,8 +315,8 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 			break;
 		layer++;
 	}
-	uvmap->uv = new UV[uvmap->nV];
-	dvmap->dv = new DV[dvmap->nV];
+	uvmap->uv = new UV[uvmap->count];
+	dvmap->dv = new DV[dvmap->count];
 	UV *pUV = uvmap->uv;
 	DV *pDV = dvmap->dv;
 	// Get u,v coords
@@ -325,14 +325,14 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 		meshInfo = objFunc->layerMesh(object, layer);
 		if (!meshInfo)
 			continue;
-		meshInfo->pntVSelect(meshInfo, _uvmap);
+		meshInfo->pntVSelect(meshInfo, reinterpret_cast<void*>(_uvmap));
 		for (unsigned long i=0;i<vertices.size();i++)
 			if (meshInfo->pntVGet(meshInfo, vertices[i].id, &pUV->u))
 			{
 				pUV->point = i;
 				pUV++;
 			}
-		for (size_t i = 0; i < polygons.size(); i++) {
+		for (index_t i = 0; i < polygons.size(); i++) {
 			if (meshInfo->pntVPGet(meshInfo, vertices[polygons[i].v1].id, polygons[i].id, &pDV->u))
 			{
 				pDV->point = 0;
@@ -358,10 +358,10 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 			break;
 		layer++;
 	}
-	qsort(uvmap->uv, uvmap->nV, sizeof(UV), cmpUV);
-	qsort(dvmap->dv, dvmap->nV, sizeof(DV), cmpDV);
-	serBaseUV.AddSerNode(&serBaseUV, uvmap->uv, uvmap->nV*sizeof(UV));
-	serBaseDV.AddSerNode(&serBaseDV, dvmap->dv, dvmap->nV*sizeof(DV));
+	qsort(uvmap->uv, uvmap->count, sizeof(UV), cmpUV);
+	qsort(dvmap->dv, dvmap->count, sizeof(DV), cmpDV);
+	serBaseUV.AddSerNode(&serBaseUV, uvmap->uv, uvmap->count*sizeof(UV));
+	serBaseDV.AddSerNode(&serBaseDV, dvmap->dv, dvmap->count*sizeof(DV));
 	return 0;
 }
 
@@ -522,7 +522,7 @@ int CMeshExport::DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID)
 		txfunc->getParam(layerID,TXTAG_VMAP, &data);
 		unsigned int i=0;
 		// TODO:: change (*surfLayer)->uvmap type to size_t
-		(*surfLayer)->uvmap = vmapList.size();
+		(*surfLayer)->uvmap = (index_t)vmapList.size();
 		for (std::list<LWID>::const_iterator it = vmapList.begin(); it!=vmapList.end();it++,i++)
 		{
             LWID vmapID = (LWID)data;
@@ -551,6 +551,16 @@ int CMeshExport::DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID)
 	return 0;
 }
 
+void DumpNodeInputs(NodeID node, LWNodeInputFuncs *nodeInputFuncs) {
+	NodeInputID nodeInput = nodeInputFuncs->first(node);
+	while (nodeInput) {
+		int connected = nodeInputFuncs->check(nodeInput);
+		const char * name = nodeInputFuncs->name(nodeInput);
+		int i = 0;
+		nodeInput = nodeInputFuncs->next(nodeInput);
+	}
+}
+
 int CMeshExport::DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surfID)
 {
 	const char ** p;
@@ -571,11 +581,40 @@ int CMeshExport::DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surf
 		// !!!pfData=surff->getFlt( surfID, *p );
 		
 		pfData=surff->getFlt((LWSurfaceID) *surfID, *p );	// Amount
-		pTempSurfInfo->type=*pMap_Type;		
-		pTempSurfInfo->val=(float)*pfData;				
+		pTempSurfInfo->type=*pMap_Type;
+		pTempSurfInfo->val=(float)*pfData;
 		if ((*pfData != 0.0F) &&(txtID = surff->getTex(*surfID,*p)))	
 			DumpSurfaceLayer(&(pTempSurfInfo->layers), txtID);
 		pTempSurfInfo++;
+	}
+
+	NodeEditorID nodeEditorID = surff->getNodeEditor(*surfID);
+	LWNodeEditorFuncs* nodeEditorFuncs = (LWNodeEditorFuncs*)global(LWNODEEDITORFUNCS_GLOBAL, GFUSE_TRANSIENT);
+	LWNodeInputFuncs* nodeInputFuncs = (LWNodeInputFuncs*)global(LWNODEINPUTFUNCS_GLOBAL, GFUSE_TRANSIENT);
+	LWNodeOutputFuncs* nodeOutputFuncs = (LWNodeOutputFuncs*)global(LWNODEOUTPUTFUNCS_GLOBAL, GFUSE_TRANSIENT);
+
+	LWNodeFuncs* nodef = (LWNodeFuncs*)global(LWNODEFUNCS_GLOBAL, GFUSE_TRANSIENT);
+
+	if (nodeEditorFuncs->getState(nodeEditorID)/*Enabled*/) {
+		NodeID rootNode = nodeEditorFuncs->getRootNodeID(nodeEditorID);
+		const char * nodeName = nodef->nodeName(rootNode);
+	
+		NodeInputID nodeInput = nodeInputFuncs->first(rootNode);
+		while (nodeInput) {
+			int connected = nodeInputFuncs->check(nodeInput);
+			const char * name = nodeInputFuncs->name(nodeInput);
+			if (connected) {
+				NodeOutputID nodeOutput = nodeInputFuncs->connectedOutput(nodeInput);
+				const char* noudOutputName = nodeInputFuncs->name(nodeOutput);
+				NodeID node = nodeOutputFuncs->node(nodeOutput);
+				DumpNodeInputs(node, nodeInputFuncs);
+				const char * nodeName = nodef->nodeName(node);
+				int i = 0;
+			}
+			int i = 0;
+			nodeInput = nodeInputFuncs->next(nodeInput);
+		}
+		//
 	}
 	CollectPtrSurfaceInfo(&serBase, *surfInfo, NUM_MAP_TYPE);
 	return 0;
@@ -667,14 +706,13 @@ void CMeshExport::WriteHeader()
 	// TODO::
 }
 
-long CMeshExport::WriteTag(const char * szTag,const long nSize,const long nElement) // File must be open...
+long CMeshExport::WriteTag(const char * tag, size_t size, size_t count) // File must be open...
 {
-	long tag;
-	tag = TAG(szTag);
+	tag_t _tag = Tag(tag);
 	DWORD written;
-	::WriteFile(m_hFile, &tag, sizeof(long),&written, NULL);
-	::WriteFile(m_hFile, &nSize, sizeof(long),&written, NULL);
-	::WriteFile(m_hFile, &nElement, sizeof(long),&written, NULL);
+	::WriteFile(m_hFile, &_tag, sizeof(index_t),&written, NULL);
+	::WriteFile(m_hFile, &size, sizeof(index_t),&written, NULL);
+	::WriteFile(m_hFile, &count, sizeof(index_t),&written, NULL);
 	return ::SetFilePointer(m_hFile, 0, NULL, FILE_CURRENT) - CHUNKHEADERSIZE;
 }
 
@@ -688,19 +726,19 @@ void CMeshExport::DumpPoints(void)
 	}
 }
 
-void CMeshExport::DumpPolygons(void)
+void CMeshExport::DumpPolygons()
 {
 	DWORD written = 0;
-	WriteTag(POLS, VERTICESPERPOLY * sizeof(long) * polygons.size(), polygons.size());
+	WriteTag(POLS, VERTICESPERPOLY * sizeof(index_t) * polygons.size(), polygons.size());
 	for (auto& p : polygons)
 	{
-		::WriteFile(m_hFile, &p.v1, sizeof(long), &written, NULL);
-		::WriteFile(m_hFile, &p.v2, sizeof(long), &written, NULL);
-		::WriteFile(m_hFile, &p.v3, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &p.v1, sizeof(index_t), &written, NULL);
+		::WriteFile(m_hFile, &p.v2, sizeof(index_t), &written, NULL);
+		::WriteFile(m_hFile, &p.v3, sizeof(index_t), &written, NULL);
 	}	
 }
 
-void CMeshExport::DumpLines(void)
+void CMeshExport::DumpLines()
 {
 	DWORD written = 0;
 	WriteTag(LINE, VERTICESPERLINE * sizeof(long) * lines.size(), lines.size());
@@ -710,7 +748,7 @@ void CMeshExport::DumpLines(void)
 		::WriteFile(m_hFile, &l.v2, sizeof(long), &written, NULL);
 	}
 }
-void CMeshExport::DumpLayers(Layer2 *layers, size_t count) {
+void CMeshExport::DumpLayers(MeshLoader::Layer *layers, size_t count) {
 	//DWORD written = 0;
 	//size_t size = 0;
 	//for (auto& l : layers) {
@@ -744,13 +782,13 @@ int CMeshExport::GetSurfIDList()
 	//Get surfaceID list
 	LWSurfaceFuncs *surff = (LWSurfaceFuncs*)global( LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT );
 	surfIDList = surff->byObject(name);
-	surf.m_nSurfaces = 0;
-	while (surfIDList[surf.m_nSurfaces] != NULL) 
+	surf.count = 0;
+	while (surfIDList[surf.count] != NULL)
     {
-        ++surf.m_nSurfaces;	// Count the number of surfaces
+        ++surf.count;	// Count the number of surfaces
         shaders_to_surfIDs.push_back(defPrg);
     }
-	return surf.m_nSurfaces;
+	return surf.count;
 }
 size_t CMeshExport::FindSurfaceIndexInSurfIdList(const char* name) {
 	LWSurfaceFuncs *surff = (LWSurfaceFuncs*)global(LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT);
@@ -765,20 +803,19 @@ size_t CMeshExport::FindSurfaceIndexInSurfIdList(const char* name) {
 	assert(false);
 	return 0;
 }
-void CMeshExport::GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, Layer2::Sections& section) {
-	std::vector<Layer2::Sections::Section> sections;
+void CMeshExport::GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, MeshLoader::Layer::Sections& section) {
+	std::vector<MeshLoader::Layer::Sections::Section> sections;
 	auto end = start + count;
 	while (start < end) {
 		count = 0u;
 		const char* surf_name = polygons[start].surf;
 		while (start + count < end && surf_name == polygons[start + count].surf) ++count;
 		auto surf_index = FindSurfaceIndexInSurfIdList(surf_name);
-		sections.push_back({TAG(SECT), (unsigned int)surf_index, (unsigned int)((count == 0) ? 0 : start), (unsigned int)count});
+		sections.push_back({Tag(SECT), (unsigned int)surf_index, (unsigned int)((count == 0) ? 0 : start), (unsigned int)count});
 		start += count;
 		//++start;
 	}
-	section.n = sections.size();
-	section.sections = (section.n) ? new Layer2::Sections::Section[section.n] : nullptr;
+	section.sections = (section.count = (index_t)sections.size()) ? new MeshLoader::Layer::Sections::Section[section.count] : nullptr;
 	std::copy(sections.begin(), sections.end(), section.sections);
 }
 
@@ -879,13 +916,13 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		DumpVMaps(object);
 		InitSerBase(&serBase);
 		GetSurfIDList();
-		surf.m_Surface = (Surface*)calloc(surf.m_nSurfaces, sizeof(Surface));
+		surf.surface = (Surface*)calloc(surf.count, sizeof(Surface));
 		// TODO: if !surf.surf...
-		CollectPtrSurface(&serBase, surf.m_Surface, surf.m_nSurfaces);
+		CollectPtrSurface(&serBase, surf.surface, surf.count);
 		long i = 0;
 		while (surfIDList[i] != NULL)
 		{
-			DumpSurfaces(&surf.m_Surface[i], &surfIDList[i], shaders_to_surfIDs[i]);
+			DumpSurfaces(&surf.surface[i], &surfIDList[i], shaders_to_surfIDs[i]);
 			i++;
 		}
 		WriteTag(SURF,serBase.RelocatePtrs(&serBase),i);
@@ -895,7 +932,7 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		vmapList.clear();
 
 		// Layers
-		Layer2 *layers2 = new Layer2[layers.size()];
+		MeshLoader::Layer *layers2 = new MeshLoader::Layer[layers.size()];
 		size_t count = 0;
 		for (auto& l : layers) {
 			//GatherLayerSurfaceSections(polygons, l.poly.start, l.poly.count, l.polySections);
@@ -905,7 +942,7 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 			layers2[count].pivot.x = l.pivot.x;
 			layers2[count].pivot.y = l.pivot.y;
 			layers2[count].pivot.z = l.pivot.z;
-			layers2[count].tag = TAG(LAYR);
+			layers2[count].tag = Tag(LAYR);
 			++count;
 			//l.surfInfo.push_back({});
 			//auto& current = l.surfInfo.back();

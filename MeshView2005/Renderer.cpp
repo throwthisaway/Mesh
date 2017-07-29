@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Renderer.h"
+#include "HelperMacros.h"
 #ifdef WIN32
 #include <windows.h>
 #include "AppConstants.h"

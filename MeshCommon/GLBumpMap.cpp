@@ -13,19 +13,18 @@ namespace Scene
 	GLenum CGLBumpMap::FromImage(Img::CImg * pImg)
 	{
 		_pImg = pImg;
-		_normalMap = pImg->GetImage();
+		_normalMap = std::move(pImg->GetImage());
 		if ((_normalMap.width & _normalMap.width - 1) || (_normalMap.height & _normalMap.height - 1))
 			Log::CLog::Write("CGLColorMap::FromImage Warning: Image does not have power-of-two dimensions...\r\n");
 		_normalMap.bpp = 24;
 		_normalMap.pf = Img::PF_RGB;
 		BYTE Bpp = _normalMap.bpp>>3;
-		_normalMap.size = _normalMap.width * _normalMap.height * Bpp;
-		_normalMap.data = new unsigned char[_normalMap.size];
-		unsigned char * pImgData = pImg->GetImage().data;
+		_normalMap.data = std::unique_ptr<uint8_t>(new uint8_t[_normalMap.width * _normalMap.height * Bpp]);
+		auto pImgData = _normalMap.data.get();
 		for (int y = _normalMap.height - 2; y >= 0; --y)
 		{
 			int yOffs = y * _normalMap.width;
-			unsigned char * pImgDataOffs = pImgData + yOffs, * _pNMapDataOffs = _normalMap.data + yOffs * Bpp;
+			unsigned char * pImgDataOffs = pImgData + yOffs, * _pNMapDataOffs = _normalMap.data.get() + yOffs * Bpp;
 			for (int x = _normalMap.width - 2; x >= 0; --x)
 			{
 				// x
@@ -45,7 +44,7 @@ namespace Scene
 		}
 		// Last row
 		int yOffs = (_normalMap.height - 1) * _normalMap.width;
-		unsigned char * pImgDataOffs = pImgData + yOffs, * _pNMapDataOffs = _normalMap.data + yOffs * Bpp;
+		unsigned char * pImgDataOffs = pImgData + yOffs, * _pNMapDataOffs = _normalMap.data.get() + yOffs * Bpp;
 		for (int x = _normalMap.width - 2; x >= 0; --x)
 		{
 			// x
@@ -69,15 +68,15 @@ namespace Scene
 		GLenum error = glGetError();
 		if (error)
 		{
-			_normalMap.Cleanup();
+			_normalMap.data.reset();
 			return error;
 		}
 		glBindTexture(GL_TEXTURE_2D, _nID);
-		glTexImage2D(GL_TEXTURE_2D, 0, Bpp, _normalMap.width, _normalMap.height, 0, pf, GL_UNSIGNED_BYTE, _normalMap.data);
+		glTexImage2D(GL_TEXTURE_2D, 0, Bpp, _normalMap.width, _normalMap.height, 0, pf, GL_UNSIGNED_BYTE, _normalMap.data.get());
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		if (!GLConfiguration::PreserveImageData)
-			_normalMap.Cleanup();
+			_normalMap.data.reset();
 		return glGetError();
 	}
 

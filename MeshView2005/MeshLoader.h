@@ -20,7 +20,7 @@ namespace Scene
 //class CChunk
 //{
 //public:
-//	long tag, size, element;
+//	tag_t tag, size, element;
 //};
 //
 //// TODO: abstract interface class

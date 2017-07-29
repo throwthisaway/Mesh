@@ -47,7 +47,7 @@ BOOL CGLBitmapFont::Load(const char * fname)
 	glBindTexture(GL_TEXTURE_2D, m_nFont);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, pImg->GetImage().bpp>>3, pImg->GetImage().width, pImg->GetImage().height,0,GLPixelFormatConverter(pImg->GetImage().pf),GL_UNSIGNED_BYTE,pImg->GetImage().data);
+	glTexImage2D(GL_TEXTURE_2D, 0, pImg->GetImage().bpp>>3, pImg->GetImage().width, pImg->GetImage().height,0,GLPixelFormatConverter(pImg->GetImage().pf),GL_UNSIGNED_BYTE, pImg->GetImage().data.get());
 	Build();
 	delete pImg;
 	return TRUE;

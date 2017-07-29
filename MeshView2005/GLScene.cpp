@@ -69,7 +69,7 @@ void CGLScene::CleanupPrograms(void)
 	m_Shaders.clear();
 }
 
-GLfloat * CGLScene::BuildUVMap(UVMap * uvmap, GLuint &uv_count)
+GLfloat * CGLScene::BuildUVMap(MeshLoader::UVMap* uvmap, GLuint& count)
 {
 
 	//TODO: Optimize, asm, MMX, SSEx, etc.
@@ -163,9 +163,9 @@ int CGLScene::LoadMeshes(int count, const char ** fnames/*"..\\..\\obj\\multilay
 		std::shared_ptr<CMesh> mesh(new CMesh(m_Shaders));
 		std::unique_ptr<IO::CFileReader> fileLoader(IO::CFileReader::Open(fnames[i]));
 		long size = fileLoader->Size();
-		std::vector<char> data(size);
-		fileLoader->Read(&data.front(), size);
-		LoadMesh(&data.front(), size, *mesh.get());
+		mesh->rawData = new uint8_t[size];
+		fileLoader->Read(mesh->rawData, size);
+		LoadMesh(mesh->rawData, size, *mesh.get());
 		mesh->m_szName = fnames[i];
 		//meshes[i].Load( new CMeshLoader("D:\\NewTek\\LightWave 3D 9\\multilayer.mesh"));
 		//meshes[i].Load( new CMeshLoader("D:\\NewTek\\LightWave 3D 9\\bumptest.mesh"));

@@ -51,7 +51,7 @@ class CGLScene : CGLExtensions
 	
 	unsigned int * m_pnVBOVertices;
 	CHud hud;
-	GLfloat * BuildUVMap(UVMap * uvmap, GLuint &uv_count);
+	GLfloat * BuildUVMap(MeshLoader::UVMap* uvmap, GLuint& count);
 	//GLvoid TextOutXY(float x,float y,const char *text,...);
 	void InitGL();
 	void ShowLight(float x, float y, float z);

@@ -7,15 +7,7 @@
 namespace Img
 {
 
-CGLImageFactory::CGLImageFactory(void)
-{
-}
-
-CGLImageFactory::~CGLImageFactory(void)
-{
-}
-
-CImg * CGLImageFactory::CreateImg(const Image * image)
+CImg * CGLImageFactory::CreateImg(const MeshLoader::Image * image)
 {
 	if (!image->path)
 		return NULL;
@@ -40,7 +32,7 @@ CImg * CGLImageFactory::CreateImg(LPCTSTR path)
 	else
 		throw CGLImageFactoryException("CGLImageFactory::CreateImg: Unhandled filetype..\r\n\text: %s", ext);
 }
-int CGLImageFactory::LoadImage(const  char * path, Img::CImg *pImg)
+int CGLImageFactory::LoadImage(LPCTSTR path, Img::CImg *pImg)
 {
 #ifndef WIN32
     char path[MAX_PATH];

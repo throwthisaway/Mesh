@@ -15,7 +15,7 @@ class CGLSurface : CGLExtensions
 	void Blending(void);
     GLenum error;
 public:
-	CGLSurface(const Surface& pSrf);
+	CGLSurface(const MeshLoader::Surface& pSrf);
 	~CGLSurface(void);
 	GLfloat _color[4];
 	GLfloat _spec[4];

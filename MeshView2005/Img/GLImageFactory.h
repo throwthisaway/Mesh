@@ -9,11 +9,9 @@ namespace Img
 class CGLImageFactory
 {
 public:
-	static CImg * CreateImg(const Image * image);
+	static CImg * CreateImg(const MeshLoader::Image * image);
 	static CImg * CreateImg(LPCTSTR path);
 	static int LoadImage(LPCTSTR path, Img::CImg *pImg);
-	CGLImageFactory(void);
-	~CGLImageFactory(void);
 };
 
 class CGLImageFactoryException

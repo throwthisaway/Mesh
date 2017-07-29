@@ -78,7 +78,7 @@ int snslb_colwidth( void *userdata, int index )
 int slb_count( void *userdata )
 {
 	CMeshExport * meshExport = (userdata) ? (CMeshExport *)userdata: ::meshExport;
-	return meshExport->surf.GetCount();
+	return meshExport->surf.count;
 }
 char * slb_name( void *userdata, int index )
 {

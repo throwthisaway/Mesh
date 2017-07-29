@@ -29,6 +29,10 @@
      if (_error)\
          Log::CLog::Write("glGetError: %s\n", gluErrorString(_error));\
      }
+#else
+#define _ASSERT_EXPR_A(expr, msg)
+#define _ASSERT_GL_ERROR(expr)
+#define _LOG_GL_ERROR(expr)
 #endif
 #else
 //#define _ASSERT_EXPR_A(expr, msg)

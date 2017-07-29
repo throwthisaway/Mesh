@@ -12,15 +12,12 @@ namespace Img
 	#define ID_BMP_FILE 0x30002
 	#define ID_BMP_LOAD 0x30003
 
-	class CBmp :
-		public CImg
+	class CBmp : public CImg
 	{
 		ImgData pic;
 	public:
-		virtual ImgData& GetImage(void);
+		virtual ImgData& GetImage();
 		virtual int Load(const char * fname);
-		virtual void Cleanup(void);
-		CBmp(void);
-		virtual ~CBmp(void);
+		virtual void Cleanup() override {};
 	};
 }

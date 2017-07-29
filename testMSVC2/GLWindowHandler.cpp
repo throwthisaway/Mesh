@@ -348,7 +348,7 @@ void CGLWindowHandler::ThreadLoop(void* param)
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	int wmId, wmEvent;
+//	int wmId, wmEvent;
 #ifdef _WIN64
     CGLWindowHandler* wndHandler = (CGLWindowHandler*)::GetWindowLong(hWnd, GWLP_USERDATA);
 #else if

@@ -11,6 +11,7 @@
 #include <utility>
 #include <algorithm>
 
+using namespace MeshLoader;
 namespace Scene
 {
 	const GLfloat CGLSurface::_shinFactor = 128.f;

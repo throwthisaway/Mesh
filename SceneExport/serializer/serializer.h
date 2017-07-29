@@ -24,7 +24,7 @@ typedef struct st_Ser_Base
 	size_t offset, size;
 	Ser_Node * (*AddSerNode)(struct st_Ser_Base * serBase, void * data, size_t size);
 	void (*CollectPtr)(Ser_Node * serNode, void ** ptr);
-	long (*RelocatePtrs)(struct st_Ser_Base * serBase);
+	size_t (*RelocatePtrs)(struct st_Ser_Base * serBase);
 	void (*Serialize)(struct st_Ser_Base *serBase, HANDLE hFile);
 	void (*Release)(struct st_Ser_Base * serBase);
 }Ser_Base;

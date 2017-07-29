@@ -11,7 +11,7 @@
 
 struct Poly
 {
-	long v1, v2, v3;
+	MeshLoader::index_t v1, v2, v3;
 	LWPolID id;
 	const char * surf;
 	size_t layer;
@@ -48,32 +48,32 @@ public:
 	LWSurfaceFuncs *surff;
 	std::string fname; // File name
 	const char * name; // Object name
-	Surfaces surf;
+	MeshLoader::Surfaces surf;
 	LWSurfaceID *surfIDList;
 	std::vector<std::string> shaders_to_surfIDs;
 	std::vector<Poly> lines;
 	std::vector<Poly> polygons;
 	std::vector<Vertex> vertices;
-	std::vector<Layer> layers;
+	std::vector<::Layer> layers;
 private:
 	int obj;
-	long WriteTag(const char * szTag,const long nSize,const long nElement);
-	void WriteHeader(void);
-	void CleanupUVMaps(_UVMap ** uvmap, size_t size);
-	void CleanupDVMaps(_DVMap ** dvmap, size_t size);
-	void DumpPoints(void);
-	void DumpPolygons(void);
-	void DumpLines(void);
-	void DumpLayers(Layer2 *layers, size_t count);
-	int DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type, int index);
+	long WriteTag(const char * tag, size_t size, size_t count);
+	void WriteHeader();
+	void CleanupUVMaps(MeshLoader::_UVMap ** uvmap, size_t size);
+	void CleanupDVMaps(MeshLoader::_DVMap ** dvmap, size_t size);
+	void DumpPoints();
+	void DumpPolygons();
+	void DumpLines();
+	void DumpLayers(MeshLoader::Layer *layers, size_t count);
+	int DumpVMap(int object, MeshLoader::_UVMap * uvmap, MeshLoader::_DVMap * dvmap, LWID type, int index);
 	int DumpVMaps(int object);	
-	int DumpImage(Image ** image, LWImageID imgID);
-	int DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID);
-	int DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surfID);
-	void DumpSurfaces(Surface *surf, const LWSurfaceID *surfID, const std::string& prgName);
+	int DumpImage(MeshLoader::Image ** image, LWImageID imgID);
+	int DumpSurfaceLayer(MeshLoader::SurfLayer ** pSurfLayer, LWTextureID txtID);
+	int DumpSurfaceInfos(MeshLoader::SurfInfo ** pSurfInfo, const LWSurfaceID *surfID);
+	void DumpSurfaces(MeshLoader::Surface *surf, const LWSurfaceID *surfID, const std::string& prgName);
 	size_t FindSurfaceIndexInSurfIdList(const char* name);
 	//void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, std::vector<Layer::SurfSection>& sections);
-	void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, Layer2::Sections& section);
+	void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, MeshLoader::Layer::Sections& section);
 public:
 	CMeshExport(GlobalFunc *global);
 	int GetSurfIDList(void);

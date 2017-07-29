@@ -37,6 +37,7 @@ protected:
     CGLProgram fixedFunc;
     int ExportData(LPCSTR vertexData, const void* data, const size_t byteLen);
 public:
+	uint8_t* rawData = nullptr;
 	//
 	std::vector<CGLSurface> _glSurfaces;
 	//
@@ -44,7 +45,7 @@ public:
 	virtual void Draw(void);
 	void Setup(unsigned int vbovertices);
 	void SetupGLSurfaces(ProgramMap& shaders);
-    CGLProgram * PrgOverride(Surface& srf);
+    CGLProgram * PrgOverride(MeshLoader::Surface& srf);
 
 	CMesh(ProgramMap& shaders);
 	virtual ~CMesh(void);

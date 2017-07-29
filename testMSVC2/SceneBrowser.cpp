@@ -18,6 +18,7 @@
 #include "FileWriter.h"
 // CSceneBrowser
 using namespace Scene;
+using namespace MeshLoader;
 
 IMPLEMENT_DYNAMIC(CSceneBrowser, CDockablePane)
 
@@ -106,9 +107,9 @@ private:
 	static void OnUpdateColor(DWORD_PTR dwData,const COLORREF color)
 	{
 		CSurfaceCommand *pSrf = (CSurfaceCommand*)dwData;
-		pSrf->_pSurface->Color.r = pSrf->_pGLSurface->_color[0] = R(color);
-		pSrf->_pSurface->Color.g = pSrf->_pGLSurface->_color[1] = G(color);
-		pSrf->_pSurface->Color.b = pSrf->_pGLSurface->_color[2] = B(color);
+		pSrf->_pSurface->stColor.r = pSrf->_pGLSurface->_color[0] = R(color);
+		pSrf->_pSurface->stColor.g = pSrf->_pGLSurface->_color[1] = G(color);
+		pSrf->_pSurface->stColor.b = pSrf->_pGLSurface->_color[2] = B(color);
 	}
 	static void OnUpdateCulling(DWORD_PTR dwData, const COleVariant& value)
 	{
@@ -141,9 +142,9 @@ public:
 		// Color
 		CMFCOnUpdateValueCallbackColorProperty* pColorProp = 
 			new CMFCOnUpdateValueCallbackColorProperty(tempStr, 
-				RGB(_pSurface->Color.r * 255.0,
-					_pSurface->Color.g * 255.0, 
-					_pSurface->Color.b * 255.0),
+				RGB(_pSurface->stColor.r * 255.0,
+					_pSurface->stColor.g * 255.0, 
+					_pSurface->stColor.b * 255.0),
 				CMFCOnUpdateValueCallbackColorProperty::OnUpdateValueCallback(OnUpdateColor),
 				NULL, _T(""), 
 				(DWORD_PTR)this);
