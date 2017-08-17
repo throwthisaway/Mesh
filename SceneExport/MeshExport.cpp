@@ -718,6 +718,7 @@ long CMeshExport::WriteTag(const char * tag, size_t size, size_t count) // File 
 
 void CMeshExport::DumpPoints(void)
 {
+	if (vertices.empty()) return;
 	DWORD written = 0;
 	WriteTag(VERT, vertices.size() * 3 * sizeof(float), vertices.size());
 	for (auto& v : vertices)
@@ -728,24 +729,26 @@ void CMeshExport::DumpPoints(void)
 
 void CMeshExport::DumpPolygons()
 {
+	if (polygons.empty()) return;
 	DWORD written = 0;
-	WriteTag(POLS, VERTICESPERPOLY * sizeof(index_t) * polygons.size(), polygons.size());
+	WriteTag(POLS, VERTICESPERPOLY * sizeof(poly_t) * polygons.size(), polygons.size());
 	for (auto& p : polygons)
 	{
-		::WriteFile(m_hFile, &p.v1, sizeof(index_t), &written, NULL);
-		::WriteFile(m_hFile, &p.v2, sizeof(index_t), &written, NULL);
-		::WriteFile(m_hFile, &p.v3, sizeof(index_t), &written, NULL);
+		::WriteFile(m_hFile, &p.v1, sizeof(poly_t), &written, NULL);
+		::WriteFile(m_hFile, &p.v2, sizeof(poly_t), &written, NULL);
+		::WriteFile(m_hFile, &p.v3, sizeof(poly_t), &written, NULL);
 	}	
 }
 
 void CMeshExport::DumpLines()
 {
+	if (lines.empty()) return;
 	DWORD written = 0;
-	WriteTag(LINE, VERTICESPERLINE * sizeof(long) * lines.size(), lines.size());
+	WriteTag(LINE, VERTICESPERLINE * sizeof(poly_t) * lines.size(), lines.size());
 	for (auto& l : lines)
 	{
-		::WriteFile(m_hFile, &l.v1, sizeof(long), &written, NULL);
-		::WriteFile(m_hFile, &l.v2, sizeof(long), &written, NULL);
+		::WriteFile(m_hFile, &l.v1, sizeof(poly_t), &written, NULL);
+		::WriteFile(m_hFile, &l.v2, sizeof(poly_t), &written, NULL);
 	}
 }
 void CMeshExport::DumpLayers(MeshLoader::Layer *layers, size_t count) {
@@ -769,6 +772,7 @@ void CMeshExport::DumpLayers(MeshLoader::Layer *layers, size_t count) {
 	//	::WriteFile(m_hFile, &size, sizeof(size_t), &written, NULL);
 	//	::WriteFile(m_hFile, &l.lineSections.front(), sizeof(l.lineSections) * l.lineSections.size(), &written, NULL);
 	//}
+	if (!count) return;
 	Ser_Base serBase;
 	InitSerBase(&serBase);
 	CollectPtrLayers(&serBase, layers, count);
