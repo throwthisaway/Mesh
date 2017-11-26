@@ -3,44 +3,38 @@
 #endif
 #include "FileWriter.h"
 
-namespace IO
-{
+namespace IO {
 
-CFileWriter * CFileWriter::Open(const char * fname, long mode)
-{
-	FILE * f;
-	unsigned long sm = 0;	
+void CFileWriter::Open(long mode) {
+	unsigned long sm = 0;
 	if (mode & FILE_REWRITE)
-		sm = 'w';	
+		sm = 'w';
 	else if (mode & FILE_APPEND)
-		sm = 'a';	
+		sm = 'a';
 	else 
-		return NULL;
+		return;
 	if (mode & FILE_BIN)
-		sm |= 'b'<<8;	
+		sm |= 'b'<<8;
 	else if (mode & FILE_TEXT)
-		sm |= 't'<<8;	
+		sm |= 't'<<8;
 	else 
-		sm |= 'b'<<8;	
+		sm |= 'b'<<8;
 	f = fopen(fname,(const char*)&sm);
-	return new CFileWriter(f, fname);
+	if (!f) throw CFileOpenException(fname);
 }
 
-size_t CFileWriter::Write(void * data, size_t count)
-{
+size_t CFileWriter::Write(void * data, size_t count) {
 	if (!IsOpened())
-		throw new CFileCannotOpenException(fname);
+		throw new CFileOpenException(fname);
 	return fwrite(data, count, 1, f);
 }
-void CFileWriter::Flush()
-{	
+void CFileWriter::Flush() {
 	if (!IsOpened())
-		throw new CFileCannotOpenException(fname);
+		throw new CFileOpenException(fname);
 	fflush(f);
 	
 }
-CFileWriter::~CFileWriter()
-{
-    Flush();
+CFileWriter::~CFileWriter() {
+	if (f) fflush(f);
 }
 }

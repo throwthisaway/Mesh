@@ -5,6 +5,7 @@
 #include "AppConstants.h"
 #include "Path.h"
 #include "lwhost.h"
+
 #define DEF_WIDTH 45
 #define DEF_BORDER_WIDTH 320
 #define DEF_SURFACE_LB_WIDTH 280
@@ -99,16 +100,17 @@ int TryCreateShaderProgram(const std::string& fName, std::string& prgName)
             return -1;
     }
     IO::CFileSystem::MkDir(shader_program_dir);
-    std::auto_ptr<IO::CFileWriter> fw(IO::CFileWriter::Open(prgPath, FILE_REWRITE | FILE_TEXT));
+	IO::CFileWriter fw(prgPath);
+	fw.Open(FILE_REWRITE | FILE_TEXT);
     IO::CPath vsPath(fName);
     vsPath.SetExt(CAppConstants::vs_ext);
-    fw->Write((void*)(const char*)vsPath, ((std::string&)vsPath).size());
-    fw->Write((void*)shader_delimiter, strlen(shader_delimiter));
+    fw.Write((void*)(const char*)vsPath, ((std::string&)vsPath).size());
+    fw.Write((void*)shader_delimiter, strlen(shader_delimiter));
     IO::CPath fsPath(fName);
     fsPath.SetExt(CAppConstants::fs_ext);
-    fw->Write((void*)(const char*)fsPath, ((std::string&)fsPath).size());
-    fw->Write((void*)shader_delimiter, strlen(shader_delimiter));
-    fw->Close();
+    fw.Write((void*)(const char*)fsPath, ((std::string&)fsPath).size());
+    fw.Write((void*)shader_delimiter, strlen(shader_delimiter));
+    fw.Close();
     IO::CPath shaderDir(shader_program_dir);
     vsPath = shaderDir + vsPath;
     if (IO::CFile::Exists(vsPath))
@@ -119,9 +121,10 @@ int TryCreateShaderProgram(const std::string& fName, std::string& prgName)
             return -2;
     }
     IO::CFileSystem::MkDir(shader_program_dir);
-    std::auto_ptr<IO::CFileWriter> vsFw(IO::CFileWriter::Open(vsPath, FILE_REWRITE | FILE_TEXT));
-    vsFw->Write((void*)def_vs, strlen(def_vs));
-    vsFw->Close();
+	IO::CFileWriter vsFw(vsPath);
+	vsFw.Open(FILE_REWRITE | FILE_TEXT);
+    vsFw.Write((void*)def_vs, strlen(def_vs));
+    vsFw.Close();
 
     fsPath = shaderDir + fsPath;
     if (IO::CFile::Exists(fsPath))
@@ -131,9 +134,10 @@ int TryCreateShaderProgram(const std::string& fName, std::string& prgName)
         if (!msgf->yesNo("Create file", fsPath, "exists. Overwrite?"))
             return -3;
     }
-    std::auto_ptr<IO::CFileWriter> fsFw(IO::CFileWriter::Open(fsPath, FILE_REWRITE | FILE_TEXT));
-    fsFw->Write((void*)def_fs, strlen(def_fs));
-    fsFw->Close();
+	IO::CFileWriter fsFw(fsPath);
+	fsFw.Open(FILE_REWRITE | FILE_TEXT);
+    fsFw.Write((void*)def_fs, strlen(def_fs));
+    fsFw.Close();
     return 0;
 }
 // shader select button event handler

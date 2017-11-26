@@ -943,7 +943,7 @@ void CSceneBrowser::OnSurfaceOverrideprogram()
         fw->Write((void*)fsName.operator const char *(), fsName.operator const std::string &().length());
         fw->Write((void*)"\n", 1);
         fw->Close();
-    }catch(IO::CFileCannotOpenException&)
+    }catch(IO::CFileOpenException&)
     {
          Log::CLog::Write(_T("Cannot create..."));
          return;

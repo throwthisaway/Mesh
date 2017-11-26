@@ -11,7 +11,6 @@
 using namespace MeshLoader;
 //////////////////////////////////////////////
 // globals...
-#define CHUNKHEADERSIZE sizeof(long)*3
 namespace {
 	const char * lwSurfMapTypes[] = { SURF_COLR,SURF_LUMI,			SURF_DIFF,	SURF_SPEC,			SURF_GLOS,		 SURF_REFL,			SURF_TRAN,			 SURF_RIND,						SURF_TRNL,			 SURF_BUMP,NULL };
 	const MAP_TYPE meshMapTypes[] = { COLOR_MAP,LUMINOSITY_MAP,DIFFUSE_MAP,SPECULARITY_MAP,GLOSSINESS_MAP,REFLECTION_MAP,TRANSPARENCY_MAP,REFRACTION_INDEX_MAP,TRANSLUCENCY_MAP,BUMP_MAP }; //LW surface map type equvivalents
@@ -263,7 +262,7 @@ void CMeshExport::CleanupUVMaps(_UVMap ** uvmap, size_t size)
 	if(uvmap && *uvmap)
 	{
 		DEL_ARRAY((*uvmap)->uv);
-		DEL_ARRAY(*uvmap);		
+		DEL_ARRAY(*uvmap);
 	}
 }
 
@@ -276,8 +275,7 @@ void CMeshExport::CleanupDVMaps(_DVMap ** dvmap, size_t size)
 	}
 }
 
-int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type, int index)
-{
+bool CMeshExport::CollectVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type, int index) {
 	float pfData[2];
 	const char * name;	
 	LWObjectFuncs * objFunc = (LWObjectFuncs*)global( LWOBJECTFUNCS_GLOBAL, GFUSE_TRANSIENT );
@@ -288,7 +286,7 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 		_uvmap = reinterpret_cast<LWID>(meshInfo->pntVLookup( meshInfo, type, name ));
 		vmapList.push_back(_uvmap);
 	}
-	else return 0;
+	else return false;
 	uvmap->count = dvmap->count =  0;
 	for (int layer = 0; layer < objFunc->maxLayers(object); ++layer) {
 		if (!objFunc->layerExists(object, layer)) continue;
@@ -362,46 +360,40 @@ int CMeshExport::DumpVMap(int object, _UVMap * uvmap, _DVMap * dvmap, LWID type,
 	qsort(dvmap->dv, dvmap->count, sizeof(DV), cmpDV);
 	serBaseUV.AddSerNode(&serBaseUV, uvmap->uv, uvmap->count*sizeof(UV));
 	serBaseDV.AddSerNode(&serBaseDV, dvmap->dv, dvmap->count*sizeof(DV));
-	return 0;
+	return true;
 }
 
-int CMeshExport::DumpVMaps(int object)
-{
-	int res;
+void CMeshExport::DumpVMaps(int object) {
 	_UVMap * uvMaps;
 	_DVMap * dvMaps;
 	long numVMaps, i;
 	uvMaps = NULL;
-	res = 0;
 	LWObjectFuncs * objfunc = (LWObjectFuncs*)global( LWOBJECTFUNCS_GLOBAL, GFUSE_TRANSIENT );
-	if (numVMaps = objfunc->numVMaps(LWVMAP_TXUV))
-	{
+	if (numVMaps = objfunc->numVMaps(LWVMAP_TXUV)) {
 		uvMaps = new _UVMap[numVMaps];
 		dvMaps = new _DVMap[numVMaps];
-		InitSerBase(&serBaseUV);		
+		InitSerBase(&serBaseUV);
 		CollectPtrUVMaps(&serBaseUV, uvMaps, numVMaps);
 		InitSerBase(&serBaseDV);
 		CollectPtrDVMaps(&serBaseDV, dvMaps, numVMaps);
-		for (i = 0, res = 0; (i < numVMaps) || (res != 0) ; i++)
-		{			
-			res = DumpVMap(object, &uvMaps[i], &dvMaps[i], LWVMAP_TXUV, i);
-		}
-		if (!res)
-		{
-			WriteTag(VMP2,serBaseUV.RelocatePtrs(&serBaseUV), numVMaps);
-			serBaseUV.Serialize(&serBaseUV, m_hFile);
-			serBaseUV.Release(&serBaseUV);
-			WriteTag(DVMP,serBaseDV.RelocatePtrs(&serBaseDV), numVMaps);
-			serBaseDV.Serialize(&serBaseDV, m_hFile);
-			serBaseDV.Release(&serBaseDV);
-		}
+		for (i = 0; i < numVMaps; i++)
+			CollectVMap(object, &uvMaps[i], &dvMaps[i], LWVMAP_TXUV, i);
+		auto size = serBaseUV.RelocatePtrs(&serBaseUV);
+		WriteTag(VMP2, size, numVMaps);
+		serBaseUV.Serialize(&serBaseUV, m_hFile);
+		serBaseUV.Release(&serBaseUV);
+		Pad(size);
+		size = serBaseDV.RelocatePtrs(&serBaseDV);
+		WriteTag(DVMP, size, numVMaps);
+		serBaseDV.Serialize(&serBaseDV, m_hFile);
+		serBaseDV.Release(&serBaseDV);
+		Pad(size);
 		CleanupUVMaps(&uvMaps, numVMaps);
 		CleanupDVMaps(&dvMaps, numVMaps);
 	}
-	return res;
 }
 
-int CMeshExport::DumpImage(Image ** image, LWImageID imgID)
+int CMeshExport::CollectImage(Image ** image, LWImageID imgID)
 {
 	Image * img;
 	//
@@ -424,7 +416,7 @@ int CMeshExport::DumpImage(Image ** image, LWImageID imgID)
 	return 0;
 }
 
-int CMeshExport::DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID)
+int CMeshExport::CollectSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID)
 {
 	SurfLayer ** surfLayer = pSurfLayer;
 	LAYER_TYPE layerType;
@@ -541,7 +533,7 @@ int CMeshExport::DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID)
 		
 		// Get the texture ID
 		txfunc->getParam(layerID,TXTAG_IMAGE,&imgID);
-		DumpImage(&((*surfLayer)->image), imgID);
+		CollectImage(&((*surfLayer)->image), imgID);
 		//(*surfLayer)->image = (Image*)imgID; //temporary
 		CollectPtrSurfaceLayer(&serBase, *surfLayer);
 		surfLayer = &((*surfLayer)->next);
@@ -551,7 +543,7 @@ int CMeshExport::DumpSurfaceLayer(SurfLayer ** pSurfLayer, LWTextureID txtID)
 	return 0;
 }
 
-void DumpNodeInputs(NodeID node, LWNodeInputFuncs *nodeInputFuncs) {
+void CollectNodeInputs(NodeID node, LWNodeInputFuncs *nodeInputFuncs) {
 	NodeInputID nodeInput = nodeInputFuncs->first(node);
 	while (nodeInput) {
 		int connected = nodeInputFuncs->check(nodeInput);
@@ -561,7 +553,7 @@ void DumpNodeInputs(NodeID node, LWNodeInputFuncs *nodeInputFuncs) {
 	}
 }
 
-int CMeshExport::DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surfID)
+int CMeshExport::CollectSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surfID)
 {
 	const char ** p;
 	SurfInfo ** surfInfo = pSurfInfo;
@@ -584,7 +576,7 @@ int CMeshExport::DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surf
 		pTempSurfInfo->type=*pMap_Type;
 		pTempSurfInfo->val=(float)*pfData;
 		if ((*pfData != 0.0F) &&(txtID = surff->getTex(*surfID,*p)))	
-			DumpSurfaceLayer(&(pTempSurfInfo->layers), txtID);
+			CollectSurfaceLayer(&(pTempSurfInfo->layers), txtID);
 		pTempSurfInfo++;
 	}
 
@@ -607,7 +599,7 @@ int CMeshExport::DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surf
 				NodeOutputID nodeOutput = nodeInputFuncs->connectedOutput(nodeInput);
 				const char* noudOutputName = nodeInputFuncs->name(nodeOutput);
 				NodeID node = nodeOutputFuncs->node(nodeOutput);
-				DumpNodeInputs(node, nodeInputFuncs);
+				CollectNodeInputs(node, nodeInputFuncs);
 				const char * nodeName = nodef->nodeName(node);
 				int i = 0;
 			}
@@ -620,9 +612,8 @@ int CMeshExport::DumpSurfaceInfos(SurfInfo ** pSurfInfo, const LWSurfaceID *surf
 	return 0;
 }
 
-void CMeshExport::DumpSurfaces(Surface *surf, const LWSurfaceID *surfID, const std::string& prgName)
-{
-	double * pfData;	
+void CMeshExport::CollectSurfaces(Surface *surf, const LWSurfaceID *surfID, const std::string& prgName) {
+	double * pfData;
 	int temp;
 	LWSurfaceFuncs *surff = (LWSurfaceFuncs*)global( LWSURFACEFUNCS_GLOBAL, GFUSE_TRANSIENT );
 	pfData = surff->getFlt(*surfID,SURF_COLR);
@@ -661,10 +652,10 @@ void CMeshExport::DumpSurfaces(Surface *surf, const LWSurfaceID *surfID, const s
 		surf->reflection_map->blurring = (float)*pfData;
 		pfData = surff->getFlt(*surfID, SURF_RSAN);
 		surf->reflection_map->seam_angle = (float)*pfData;
-		DumpImage(&(surf->reflection_map->map), surff->getTex(*surfID, SURF_RIMG));
+		CollectImage(&(surf->reflection_map->map), surff->getTex(*surfID, SURF_RIMG));
 		CollectPtrRefMap(&serBase, surf->reflection_map);		
 	}
-	if (DumpSurfaceInfos(&(surf->surface_infos), surfID) < 0)
+	if (CollectSurfaceInfos(&(surf->surface_infos), surfID) < 0)
 	{
 		// ERROR HANDLING: Can't allocate...
 		CleanupSurface(surf);
@@ -696,60 +687,62 @@ m_bShowMeshExportPanel(TRUE)
 	this->global = global;
 }
 
-CMeshExport::~CMeshExport(void)
-{
-}
+CMeshExport::~CMeshExport() = default;
 
-
-void CMeshExport::WriteHeader()
-{
-	// TODO::
-}
-
-long CMeshExport::WriteTag(const char * tag, size_t size, size_t count) // File must be open...
-{
-	tag_t _tag = Tag(tag);
+DWORD CMeshExport::Pad(size_t val) {
 	DWORD written;
-	::WriteFile(m_hFile, &_tag, sizeof(index_t),&written, NULL);
-	::WriteFile(m_hFile, &size, sizeof(index_t),&written, NULL);
-	::WriteFile(m_hFile, &count, sizeof(index_t),&written, NULL);
-	return ::SetFilePointer(m_hFile, 0, NULL, FILE_CURRENT) - CHUNKHEADERSIZE;
+	auto aligned = AlignTo(val, alignment);
+	const uint8_t padding[alignment] = {};
+	::WriteFile(m_hFile, &padding, aligned - val, &written, nullptr);
+	return written;
+}
+void CMeshExport::WriteHeader() {
+	Header header = { Tag("MESH"), 1, alignment, sizeof(tag_t), sizeof(index_t), sizeof(poly_t) };
+	DWORD written;
+	::WriteFile(m_hFile, &header, sizeof(header), &written, nullptr);
+	Pad(sizeof(header));
 }
 
-void CMeshExport::DumpPoints(void)
-{
+void CMeshExport::WriteTag(const char * tag, size_t size, size_t count) {
+	DWORD written;
+	Chunk chunk = { Tag(tag), size, count };
+	::WriteFile(m_hFile, &chunk, sizeof(chunk), &written, nullptr);
+	Pad(sizeof(chunk));
+}
+
+void CMeshExport::DumpPoints() {
 	if (vertices.empty()) return;
-	DWORD written = 0;
-	WriteTag(VERT, vertices.size() * 3 * sizeof(float), vertices.size());
+	DWORD written;
+	const auto size = vertices.size() * sizeof(vertices.front().pos);
+	WriteTag(VERT, size, vertices.size());
 	for (auto& v : vertices)
-	{
-		::WriteFile(m_hFile, v.pos, sizeof(float) * 3, &written, NULL);
-	}
+		::WriteFile(m_hFile, v.pos, sizeof(v.pos), &written, nullptr);
+	Pad(size);
 }
 
-void CMeshExport::DumpPolygons()
-{
+void CMeshExport::DumpPolygons() {
 	if (polygons.empty()) return;
-	DWORD written = 0;
-	WriteTag(POLS, VERTICESPERPOLY * sizeof(poly_t) * polygons.size(), polygons.size());
-	for (auto& p : polygons)
-	{
+	DWORD written;
+	const auto size = VERTICESPERPOLY * sizeof(poly_t) * polygons.size();
+	WriteTag(POLS, size, polygons.size());
+	for (const auto& p : polygons) {
 		::WriteFile(m_hFile, &p.v1, sizeof(poly_t), &written, NULL);
 		::WriteFile(m_hFile, &p.v2, sizeof(poly_t), &written, NULL);
 		::WriteFile(m_hFile, &p.v3, sizeof(poly_t), &written, NULL);
-	}	
+	}
+	Pad(size);
 }
 
-void CMeshExport::DumpLines()
-{
+void CMeshExport::DumpLines() {
 	if (lines.empty()) return;
-	DWORD written = 0;
-	WriteTag(LINE, VERTICESPERLINE * sizeof(poly_t) * lines.size(), lines.size());
-	for (auto& l : lines)
-	{
+	DWORD written;
+	const auto size = VERTICESPERLINE * sizeof(poly_t) * lines.size();
+	WriteTag(LINE, size, lines.size());
+	for (const auto& l : lines)	{
 		::WriteFile(m_hFile, &l.v1, sizeof(poly_t), &written, NULL);
 		::WriteFile(m_hFile, &l.v2, sizeof(poly_t), &written, NULL);
 	}
+	Pad(size);
 }
 void CMeshExport::DumpLayers(MeshLoader::Layer *layers, size_t count) {
 	//DWORD written = 0;
@@ -777,9 +770,11 @@ void CMeshExport::DumpLayers(MeshLoader::Layer *layers, size_t count) {
 	InitSerBase(&serBase);
 	CollectPtrLayers(&serBase, layers, count);
 	DWORD written = 0;
-	WriteTag(LAYR, serBase.RelocatePtrs(&serBase), count);
+	auto size = serBase.RelocatePtrs(&serBase);
+	WriteTag(LAYR, size, count);
 	serBase.Serialize(&serBase, m_hFile);
 	serBase.Release(&serBase);
+	Pad(size);
 }
 int CMeshExport::GetSurfIDList()
 {
@@ -926,11 +921,13 @@ void CMeshExport::Save(LWObjectFuncs * objFunc, int object)
 		long i = 0;
 		while (surfIDList[i] != NULL)
 		{
-			DumpSurfaces(&surf.surface[i], &surfIDList[i], shaders_to_surfIDs[i]);
+			CollectSurfaces(&surf.surface[i], &surfIDList[i], shaders_to_surfIDs[i]);
 			i++;
 		}
-		WriteTag(SURF,serBase.RelocatePtrs(&serBase),i);
+		auto size = serBase.RelocatePtrs(&serBase);
+		WriteTag(SURF, size,i);
 		serBase.Serialize(&serBase, m_hFile);
+		Pad(size);
 		serBase.Release(&serBase);	
 		CleanupSurfaces(&surf);
 		vmapList.clear();

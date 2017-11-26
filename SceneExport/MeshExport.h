@@ -57,7 +57,8 @@ public:
 	std::vector<::Layer> layers;
 private:
 	int obj;
-	long WriteTag(const char * tag, size_t size, size_t count);
+	DWORD Pad(size_t val);
+	void WriteTag(const char * tag, size_t size, size_t count);
 	void WriteHeader();
 	void CleanupUVMaps(MeshLoader::_UVMap ** uvmap, size_t size);
 	void CleanupDVMaps(MeshLoader::_DVMap ** dvmap, size_t size);
@@ -65,12 +66,12 @@ private:
 	void DumpPolygons();
 	void DumpLines();
 	void DumpLayers(MeshLoader::Layer *layers, size_t count);
-	int DumpVMap(int object, MeshLoader::_UVMap * uvmap, MeshLoader::_DVMap * dvmap, LWID type, int index);
-	int DumpVMaps(int object);	
-	int DumpImage(MeshLoader::Image ** image, LWImageID imgID);
-	int DumpSurfaceLayer(MeshLoader::SurfLayer ** pSurfLayer, LWTextureID txtID);
-	int DumpSurfaceInfos(MeshLoader::SurfInfo ** pSurfInfo, const LWSurfaceID *surfID);
-	void DumpSurfaces(MeshLoader::Surface *surf, const LWSurfaceID *surfID, const std::string& prgName);
+	bool CollectVMap(int object, MeshLoader::_UVMap * uvmap, MeshLoader::_DVMap * dvmap, LWID type, int index);
+	void DumpVMaps(int object);
+	int CollectImage(MeshLoader::Image ** image, LWImageID imgID);
+	int CollectSurfaceLayer(MeshLoader::SurfLayer ** pSurfLayer, LWTextureID txtID);
+	int CollectSurfaceInfos(MeshLoader::SurfInfo ** pSurfInfo, const LWSurfaceID *surfID);
+	void CollectSurfaces(MeshLoader::Surface *surf, const LWSurfaceID *surfID, const std::string& prgName);
 	size_t FindSurfaceIndexInSurfIdList(const char* name);
 	//void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, std::vector<Layer::SurfSection>& sections);
 	void GatherLayerSurfaceSections(std::vector<Poly>& polygons, size_t start, size_t count, MeshLoader::Layer::Sections& section);

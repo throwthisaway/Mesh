@@ -95,7 +95,7 @@ void Serialize(Ser_Base *serBase,  HANDLE hFile)
 		while (ptrNode)
 		{
 			ptrNode->real_ptr = *(ptrNode->ptr);	// Used when pre-collecting the pointers
-			*(ptrNode->ptr) = (void*)ptrNode->reloc_ptr;			
+			*(ptrNode->ptr) = (void*)ptrNode->reloc_ptr;
 			ptrNode = ptrNode->next;
 		}
 		WriteFile(hFile, node->data,node->size,&written, NULL);
