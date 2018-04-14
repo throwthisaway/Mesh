@@ -39,7 +39,7 @@ namespace Scene
 			return error;
 		glBindTexture(GL_TEXTURE_2D, _nID);
 		// TODO: Image instance should store information about filtering...
-		glTexImage2D(GL_TEXTURE_2D, 0, imgData.bpp>>3, imgData.width, imgData.height, 0, pf, GL_UNSIGNED_BYTE, imgData.data.get());
+		glTexImage2D(GL_TEXTURE_2D, 0, imgData.bytesPerPixel, imgData.width, imgData.height, 0, pf, GL_UNSIGNED_BYTE, imgData.data.get());
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 		return glGetError();

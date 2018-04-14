@@ -16,9 +16,8 @@ namespace Scene
 		_normalMap = std::move(pImg->GetImage());
 		if ((_normalMap.width & _normalMap.width - 1) || (_normalMap.height & _normalMap.height - 1))
 			Log::CLog::Write("CGLColorMap::FromImage Warning: Image does not have power-of-two dimensions...\r\n");
-		_normalMap.bpp = 24;
-		_normalMap.pf = Img::PF_RGB;
-		BYTE Bpp = _normalMap.bpp>>3;
+		BYTE Bpp = _normalMap.bytesPerPixel = 3;
+		_normalMap.pf = Img::PixelFormat::RGB8;
 		_normalMap.data = std::unique_ptr<uint8_t>(new uint8_t[_normalMap.width * _normalMap.height * Bpp]);
 		auto pImgData = _normalMap.data.get();
 		for (int y = _normalMap.height - 2; y >= 0; --y)

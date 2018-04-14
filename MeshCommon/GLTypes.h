@@ -8,5 +8,5 @@ namespace Scene
 {
 	typedef std::set<GLenum> GLEnumSet;
 	typedef std::vector<std::pair<GLenum, GLenum>> TexEnv;
-	GLenum GLPixelFormatConverter(Img::PIXELFORMAT pf);
+	GLenum GLPixelFormatConverter(Img::PixelFormat pf);
 }

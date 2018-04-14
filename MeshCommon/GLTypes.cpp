@@ -2,19 +2,19 @@
 #include "glext.h"
 namespace Scene
 {
-	GLenum GLPixelFormatConverter(Img::PIXELFORMAT pf)
+	GLenum GLPixelFormatConverter(Img::PixelFormat pf)
 	{
 		switch(pf)
 		{
-		case Img::PF_GREYSCALE8:
+		case Img::PixelFormat::Greyscale8:
 			return GL_RED;
-		case Img::PF_RGB:
+		case Img::PixelFormat::RGB8:
 			return GL_RGB;
-		case Img::PF_RGBA:
+		case Img::PixelFormat::RGBA8:
 			return GL_RGBA;
-		case Img::PF_BGR:
+		case Img::PixelFormat::BGR8:
 			return GL_BGR;
-		case Img::PF_BGRA:
+		case Img::PixelFormat::BGRA8:
 			return GL_BGRA;
 		}
 		return GL_RGBA;

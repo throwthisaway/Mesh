@@ -46,6 +46,7 @@ namespace {
 		std::vector<Vertex>& vertices;
 		int& layer;
 	};
+	// #define CCW
 	size_t polygonScan(void * data, LWPolID polID)
 	{
 		PolyScanData * psd = (PolyScanData*)data;
@@ -61,21 +62,25 @@ namespace {
 		LWPntID pntID = meshInfo->polVertex(meshInfo, polID, 0);
 		auto it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
 		assert(it != std::end(psd->vertices));
-		index_t v3 = (index_t)std::distance(std::begin(psd->vertices), it);
+		index_t v1 = (index_t)std::distance(std::begin(psd->vertices), it);
 		pntID = meshInfo->polVertex(meshInfo, polID, 1);
 		it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
 		assert(it != std::end(psd->vertices));
 		index_t v2 = (index_t)std::distance(std::begin(psd->vertices), it);
 		const char* surf = meshInfo->polTag(meshInfo, polID, LWPTAG_SURF);
 		if (vCount == VERTICESPERLINE) {
-			psd->lines.push_back({ v3, v2, 0u, polID, surf, (size_t)psd->layer });
+			psd->lines.push_back({ v1, v2, 0u, polID, surf, (size_t)psd->layer });
 			return 0;
 		}
 		pntID = meshInfo->polVertex(meshInfo, polID, 2);
 		it = std::lower_bound(std::begin(psd->vertices), std::end(psd->vertices), pntID, less);
 		assert(it != std::end(psd->vertices));
-		index_t v1 = (index_t)std::distance(std::begin(psd->vertices), it);
+		index_t v3 = (index_t)std::distance(std::begin(psd->vertices), it);
+#ifdef CCW
+		psd->polygons.push_back({ v3, v2, v1, polID, surf, (size_t)psd->layer });
+#else
 		psd->polygons.push_back({ v1, v2, v3, polID, surf, (size_t)psd->layer });
+#endif
 		return 0;
 	}
 
